@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Platform,
   Animated,
@@ -86,7 +85,7 @@ export default function HomeScreen() {
   };
 
   const t = {
-    heroTitle: language === 'es' ? 'Ahorra en\nSeguro de Auto' : 'Save on\nAuto Insurance',
+    heroTitle: language === 'es' ? 'Ahorra en Seguro de Auto' : 'Save on Auto Insurance',
     heroSubtitle: language === 'es' 
       ? 'Sube tu póliza. Recibe cotizaciones reales. Sin spam.'
       : 'Upload your policy. Get real quotes. No spam.',
@@ -100,7 +99,7 @@ export default function HomeScreen() {
     step3: language === 'es' ? 'Recibe cotizaciones por WhatsApp' : 'Get real quotes via WhatsApp',
     whatsappCta: language === 'es' ? 'Enviar por WhatsApp' : 'Send via WhatsApp',
     agentTitle: language === 'es' ? 'Agentes de seguros' : 'Insurance Agents',
-    agentSubtitle: language === 'es' ? 'Recibe leads calificados de seguro de auto.' : 'Get qualified auto insurance leads.',
+    agentSubtitle: language === 'es' ? 'Recibe leads calificados.' : 'Get qualified leads.',
     agentCta: language === 'es' ? 'Acceso agentes' : 'Agent sign in',
   };
 
@@ -113,18 +112,11 @@ export default function HomeScreen() {
         end={{ x: 1, y: 1 }}
       />
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 32 }
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 12 }]}>
         <View style={styles.header}>
           <View style={styles.logoContainer}>
             <View style={styles.logoIcon}>
-              <Shield size={20} color="#FFFFFF" />
+              <Shield size={18} color="#FFFFFF" />
             </View>
             <Text style={styles.logoText}>Saver</Text>
           </View>
@@ -142,24 +134,24 @@ export default function HomeScreen() {
             onPress={handleUpload}
             activeOpacity={0.9}
           >
-            <Upload size={22} color={COLORS.primary} />
+            <Upload size={20} color={COLORS.primary} />
             <Text style={styles.primaryCTAText}>{t.uploadCta}</Text>
           </TouchableOpacity>
         </Animated.View>
 
         <View style={styles.trustBadges}>
           <View style={styles.trustItem}>
-            <DollarSign size={16} color={COLORS.success} />
+            <DollarSign size={14} color={COLORS.success} />
             <Text style={styles.trustText}>{t.trustFree}</Text>
           </View>
           <View style={styles.trustDot} />
           <View style={styles.trustItem}>
-            <Zap size={16} color={COLORS.accent} />
+            <Zap size={14} color={COLORS.accent} />
             <Text style={styles.trustText}>{t.trustEasy}</Text>
           </View>
           <View style={styles.trustDot} />
           <View style={styles.trustItem}>
-            <Clock size={16} color={COLORS.primary} />
+            <Clock size={14} color={COLORS.primary} />
             <Text style={styles.trustText}>{t.trustFast}</Text>
           </View>
         </View>
@@ -168,38 +160,23 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>{t.howItWorks}</Text>
           
           <View style={styles.stepsCard}>
-            <View style={styles.stepItem}>
-              <View style={styles.stepNumberContainer}>
-                <Text style={styles.stepNumber}>1</Text>
-              </View>
+            <View style={styles.stepRow}>
               <View style={styles.stepIconWrapper}>
-                <FileSearch size={24} color={COLORS.primary} />
+                <FileSearch size={18} color={COLORS.primary} />
               </View>
-              <Text style={styles.stepText}>{t.step1}</Text>
+              <Text style={styles.stepText}>1. {t.step1}</Text>
             </View>
-
-            <View style={styles.stepConnector} />
-
-            <View style={styles.stepItem}>
-              <View style={styles.stepNumberContainer}>
-                <Text style={styles.stepNumber}>2</Text>
-              </View>
+            <View style={styles.stepRow}>
               <View style={styles.stepIconWrapper}>
-                <CheckCircle2 size={24} color={COLORS.success} />
+                <CheckCircle2 size={18} color={COLORS.success} />
               </View>
-              <Text style={styles.stepText}>{t.step2}</Text>
+              <Text style={styles.stepText}>2. {t.step2}</Text>
             </View>
-
-            <View style={styles.stepConnector} />
-
-            <View style={styles.stepItem}>
-              <View style={styles.stepNumberContainer}>
-                <Text style={styles.stepNumber}>3</Text>
-              </View>
+            <View style={styles.stepRow}>
               <View style={styles.stepIconWrapper}>
-                <MessageCircle size={24} color={COLORS.accent} />
+                <MessageCircle size={18} color={COLORS.accent} />
               </View>
-              <Text style={styles.stepText}>{t.step3}</Text>
+              <Text style={styles.stepText}>3. {t.step3}</Text>
             </View>
           </View>
         </View>
@@ -210,7 +187,7 @@ export default function HomeScreen() {
             onPress={handleWhatsApp}
             activeOpacity={0.8}
           >
-            <MessageCircle size={20} color="#25D366" />
+            <MessageCircle size={18} color="#25D366" />
             <Text style={styles.whatsappCTAText}>{t.whatsappCta}</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -223,7 +200,7 @@ export default function HomeScreen() {
           >
             <View style={styles.agentCardLeft}>
               <View style={styles.agentIconWrapper}>
-                <Users size={24} color={COLORS.primary} />
+                <Users size={20} color={COLORS.primary} />
               </View>
               <View style={styles.agentTextContent}>
                 <Text style={styles.agentCardTitle}>{t.agentTitle}</Text>
@@ -232,11 +209,11 @@ export default function HomeScreen() {
             </View>
             <View style={styles.agentCtaWrapper}>
               <Text style={styles.agentCtaText}>{t.agentCta}</Text>
-              <ChevronRight size={18} color={COLORS.primary} />
+              <ChevronRight size={16} color={COLORS.primary} />
             </View>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -251,77 +228,76 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 320,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    height: 260,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
-  scrollView: {
+  content: {
     flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
+    justifyContent: 'space-between',
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 16,
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   logoIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "700" as const,
     color: '#FFFFFF',
     letterSpacing: -0.5,
   },
   heroSection: {
-    marginBottom: 32,
-  },
-  heroTitle: {
-    fontSize: 38,
-    fontWeight: "800" as const,
-    color: '#FFFFFF',
-    letterSpacing: -1.5,
-    lineHeight: 46,
     marginBottom: 16,
   },
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: "800" as const,
+    color: '#FFFFFF',
+    letterSpacing: -1,
+    lineHeight: 34,
+    marginBottom: 8,
+  },
   heroSubtitle: {
-    fontSize: 17,
+    fontSize: 15,
     color: 'rgba(255,255,255,0.9)',
-    lineHeight: 26,
+    lineHeight: 22,
   },
   ctaContainer: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   primaryCTA: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    borderRadius: 16,
-    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 28,
+    borderRadius: 14,
+    gap: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 6,
   },
   primaryCTAText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700' as const,
     color: COLORS.primary,
     letterSpacing: 0.2,
@@ -330,132 +306,112 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 40,
-    gap: 12,
+    marginBottom: 20,
+    gap: 10,
   },
   trustItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   trustText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '700' as const,
     color: 'rgba(255,255,255,0.9)',
     letterSpacing: 0.5,
   },
   trustDot: {
-    width: 4,
-    height: 4,
+    width: 3,
+    height: 3,
     borderRadius: 2,
     backgroundColor: 'rgba(255,255,255,0.5)',
   },
   howItWorksSection: {
-    marginBottom: 24,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700' as const,
     color: COLORS.text,
-    marginBottom: 20,
+    marginBottom: 12,
     textAlign: 'center',
   },
   stepsCard: {
     backgroundColor: COLORS.surface,
-    borderRadius: 24,
-    padding: 28,
+    borderRadius: 16,
+    padding: 16,
+    gap: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  stepItem: {
+  stepRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-  },
-  stepNumberContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepNumber: {
-    fontSize: 14,
-    fontWeight: '700' as const,
-    color: '#FFFFFF',
+    gap: 12,
   },
   stepIconWrapper: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     backgroundColor: COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.text,
     fontWeight: '500' as const,
-    lineHeight: 22,
-  },
-  stepConnector: {
-    width: 2,
-    height: 24,
-    backgroundColor: COLORS.border,
-    marginLeft: 13,
-    marginVertical: 8,
   },
   whatsappContainer: {
-    marginBottom: 32,
+    marginBottom: 12,
   },
   whatsappCTA: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: COLORS.surface,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 14,
-    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
     borderWidth: 1.5,
     borderColor: '#25D366',
   },
   whatsappCTAText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600' as const,
     color: '#25D366',
   },
   agentSection: {
-    marginTop: 8,
+    marginTop: 'auto',
   },
   agentCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: COLORS.surface,
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 14,
+    padding: 14,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   agentCardLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
     flex: 1,
   },
   agentIconWrapper: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: 'rgba(37, 99, 235, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -464,23 +420,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   agentCardTitle: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '700' as const,
     color: COLORS.text,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   agentCardSubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: COLORS.textSecondary,
-    lineHeight: 20,
   },
   agentCtaWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   agentCtaText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600' as const,
     color: COLORS.primary,
   },
