@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,6 +39,8 @@ import {
   buildMissingFieldsSummary,
   QuoteInput,
 } from '@/utils/quoteReadiness';
+
+const WHATSAPP_NUMBER = '+19567738844';
 
 interface UploadedFile {
   uri: string;
@@ -93,7 +96,15 @@ export default function UploadDocumentScreen() {
 
   const isWeb = Platform.OS === 'web';
 
-  // Auto-navigate to chat when all files are invalid
+  const openWhatsApp = useCallback(() => {
+    const message = language === 'es'
+      ? 'Hola, quiero comparar mi seguro de auto. ¿Pueden ayudarme?'
+      : 'Hi, I want to compare my auto insurance. Can you help me?';
+    const url = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+    Linking.openURL(url);
+  }, [language]);
+
+  // Auto-open WhatsApp when all files are invalid
   useEffect(() => {
     if (hasAutoNavigated.current) return;
 
@@ -103,17 +114,14 @@ export default function UploadDocumentScreen() {
 
     if (hasFiles && allDoneScanning && allInvalid) {
       hasAutoNavigated.current = true;
-      console.log('[UPLOAD] All files invalid, auto-navigating to chat');
+      console.log('[UPLOAD] All files invalid, opening WhatsApp');
       triggerHaptic('warning');
 
       setTimeout(() => {
-        router.push({
-          pathname: '/ai-assistant',
-          params: { mode: 'intake', skipUpload: 'true', invalidDoc: 'true' },
-        } as any);
+        openWhatsApp();
       }, 500);
     }
-  }, [uploadedFiles, router, triggerHaptic]);
+  }, [uploadedFiles, triggerHaptic, openWhatsApp]);
 
   const { t } = useApp();
   const text = t.upload;
@@ -562,7 +570,7 @@ export default function UploadDocumentScreen() {
     const missing = missingFields(intake);
     const ready = canQuote(intake);
     const status = getIntakeStatus(intake);
-    const summary = buildMissingFieldsSummary(intake, intake.language || 'en');
+    buildMissingFieldsSummary(intake, intake.language || 'en');
 
     console.log('[UPLOAD] Gate evaluation:', { ready, status, missingCount: missing.length });
     console.log('[UPLOAD] Missing fields:', missing.map(m => m.key));
@@ -583,13 +591,12 @@ export default function UploadDocumentScreen() {
       console.error('[UPLOAD] Failed to submit intake:', error);
     }
 
-    // 6) If NOT ready to quote, save pending intake and navigate to assistant
+    // 6) If NOT ready to quote, still go to success page - agent will follow up via WhatsApp
     if (!ready) {
-      console.log('[UPLOAD] Not ready to quote, redirecting to assistant');
-      console.log('[UPLOAD] Missing summary:', summary.message);
-      console.log('[UPLOAD] LeadId for assistant:', leadId);
+      console.log('[UPLOAD] Not ready to quote, but still showing success - agent will follow up');
+      console.log('[UPLOAD] Missing fields:', missing.map(m => m.key));
 
-      // Save pending intake to context so assistant can access it
+      // Save pending intake to context
       await setPendingIntake({
         leadId: leadId || `lead_${Date.now()}`,
         intake,
@@ -599,10 +606,7 @@ export default function UploadDocumentScreen() {
       });
 
       setIsUploading(false);
-      router.push({
-        pathname: '/ai-assistant',
-        params: { leadId: leadId || '', intakeStatus: status, mode: 'intake' },
-      } as any);
+      router.push('/quote-submitted');
       return;
     }
 
@@ -820,27 +824,7 @@ export default function UploadDocumentScreen() {
 
           <Text style={styles.noteText}>{text.note}</Text>
 
-          {/* Invalid files card removed - auto-navigates to chat now */}
 
-          {/* Always show option to skip upload */}
-          {uploadedFiles.length === 0 && (
-            <TouchableOpacity
-              style={styles.skipUploadButton}
-              onPress={() => {
-                triggerHaptic('light');
-                router.push({
-                  pathname: '/ai-assistant',
-                  params: { mode: 'intake', skipUpload: 'true' },
-                } as any);
-              }}
-            >
-              <Text style={styles.skipUploadText}>
-                {language === 'es'
-                  ? '¿No tienes tu póliza? Continúa con el chat'
-                  : 'Don\'t have your policy? Continue with chat'}
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
       </ScrollView>
 
