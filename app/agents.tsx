@@ -9,15 +9,13 @@ import {
   Animated,
   Linking,
 } from "react-native";
-
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import {
   Users,
   Target,
   PhoneOff,
   MessageSquare,
-  CheckCircle,
+  CheckCircle2,
   ArrowRight,
   Shield,
 } from "lucide-react-native";
@@ -25,26 +23,28 @@ import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 
 const COLORS = {
-  background: '#0F172A',
-  backgroundLight: '#1E293B',
+  background: '#FFFFFF',
+  backgroundSecondary: '#F8FAFC',
   surface: '#FFFFFF',
-  primary: '#3B82F6',
-  primaryDark: '#2563EB',
-  primaryLight: '#60A5FA',
-  text: '#FFFFFF',
-  textDark: '#1E293B',
-  textSecondary: '#94A3B8',
-  textMuted: '#64748B',
-  border: '#334155',
+  primary: '#2563EB',
+  primaryDark: '#1D4ED8',
+  primaryLight: '#3B82F6',
+  primaryGlow: 'rgba(37, 99, 235, 0.12)',
+  text: '#0F172A',
+  textSecondary: '#475569',
+  textMuted: '#94A3B8',
+  border: '#E2E8F0',
   success: '#10B981',
-  accent: '#8B5CF6',
+  successGlow: 'rgba(16, 185, 129, 0.12)',
+  accent: '#0EA5E9',
+  accentGlow: 'rgba(14, 165, 233, 0.12)',
   warning: '#F59E0B',
+  warningGlow: 'rgba(245, 158, 11, 0.12)',
 };
 
 const WHATSAPP_NUMBER = '+19567738844';
 
 export default function AgentsScreen() {
-  
   const insets = useSafeAreaInsets();
   const { language } = useApp();
 
@@ -52,15 +52,15 @@ export default function AgentsScreen() {
 
   const animatePress = useCallback((scale: Animated.Value) => {
     Animated.sequence([
-      Animated.timing(scale, { toValue: 0.96, duration: 100, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1, duration: 100, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 0.97, duration: 80, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 1, duration: 80, useNativeDriver: true }),
     ]).start();
   }, []);
 
   const handleJoinPress = () => {
     animatePress(ctaScale);
     if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     const message = language === 'es'
       ? 'Hola, soy agente de seguros de auto y quiero unirme a Saver.'
@@ -74,64 +74,70 @@ export default function AgentsScreen() {
       icon: Target,
       titleEn: 'Qualified Leads',
       titleEs: 'Leads Calificados',
-      descEn: 'Real drivers actively looking to save on auto insurance',
-      descEs: 'Conductores reales buscando ahorrar en seguro de auto',
+      descEn: 'Real drivers actively looking to save',
+      descEs: 'Conductores reales buscando ahorrar',
       color: COLORS.success,
+      bgColor: COLORS.successGlow,
     },
     {
       icon: PhoneOff,
       titleEn: 'No Cold Calls',
       titleEs: 'Sin Llamadas en Frío',
-      descEn: 'Leads come to you — no dialing, no rejection',
-      descEs: 'Los leads vienen a ti — sin marcar, sin rechazo',
+      descEn: 'Leads come to you directly',
+      descEs: 'Los leads vienen a ti directamente',
       color: COLORS.warning,
+      bgColor: COLORS.warningGlow,
     },
     {
       icon: MessageSquare,
       titleEn: 'WhatsApp Ready',
       titleEs: 'Listo para WhatsApp',
-      descEn: 'Connect with leads on their preferred channel',
-      descEs: 'Conecta con leads en su canal preferido',
+      descEn: 'Connect on their preferred channel',
+      descEs: 'Conecta en su canal preferido',
       color: COLORS.accent,
+      bgColor: COLORS.accentGlow,
     },
   ];
 
+  const t = {
+    heroTitle: language === 'es' ? 'Agentes de\nSeguro de Auto' : 'Auto Insurance\nAgents',
+    heroSubtitle: language === 'es'
+      ? 'Únete a Saver y recibe leads de conductores que buscan ahorrar.'
+      : 'Join Saver and receive leads from drivers looking to save.',
+    whySaver: language === 'es' ? '¿Por qué Saver?' : 'Why Saver?',
+    benefit1: language === 'es' ? 'Sin costo de plataforma' : 'No platform fees',
+    benefit2: language === 'es' ? 'Leads pre-calificados con póliza' : 'Pre-qualified leads with policy',
+    benefit3: language === 'es' ? 'Comunicación directa por WhatsApp' : 'Direct WhatsApp communication',
+    benefit4: language === 'es' ? 'Solo agentes licenciados en Texas' : 'Licensed Texas agents only',
+    joinCta: language === 'es' ? 'Únete como Agente' : 'Join as an Agent',
+    footer: language === 'es'
+      ? 'Por ahora solo aceptamos agentes P&C con licencia activa en Texas.'
+      : 'Currently accepting Texas P&C licensed agents only.',
+  };
+
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[COLORS.background, COLORS.backgroundLight, COLORS.background]}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: 20, paddingBottom: insets.bottom + 40 }
+          { paddingBottom: insets.bottom + 40 }
         ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heroSection}>
           <View style={styles.iconBadge}>
-            <Users size={32} color={COLORS.primary} />
+            <Users size={28} color={COLORS.primary} />
           </View>
-          <Text style={styles.heroTitle}>
-            {language === 'es' ? 'Agentes de\nSeguro de Auto' : 'Auto Insurance\nAgents'}
-          </Text>
-          <Text style={styles.heroSubtitle}>
-            {language === 'es'
-              ? 'Únete a Saver y recibe leads de conductores que buscan ahorrar en su seguro de auto.'
-              : 'Join Saver and receive leads from drivers looking to save on their auto insurance.'}
-          </Text>
+          <Text style={styles.heroTitle}>{t.heroTitle}</Text>
+          <Text style={styles.heroSubtitle}>{t.heroSubtitle}</Text>
         </View>
 
         <View style={styles.valuePropsSection}>
           {valuePropItems.map((item, index) => (
             <View key={index} style={styles.valuePropCard}>
-              <View style={[styles.valuePropIcon, { backgroundColor: item.color + '20' }]}>
-                <item.icon size={24} color={item.color} />
+              <View style={[styles.valuePropIcon, { backgroundColor: item.bgColor }]}>
+                <item.icon size={22} color={item.color} />
               </View>
               <View style={styles.valuePropContent}>
                 <Text style={styles.valuePropTitle}>
@@ -146,36 +152,26 @@ export default function AgentsScreen() {
         </View>
 
         <View style={styles.benefitsCard}>
-          <Text style={styles.benefitsTitle}>
-            {language === 'es' ? '¿Por qué Saver?' : 'Why Saver?'}
-          </Text>
+          <Text style={styles.benefitsTitle}>{t.whySaver}</Text>
           
           <View style={styles.benefitRow}>
-            <CheckCircle size={18} color={COLORS.success} />
-            <Text style={styles.benefitText}>
-              {language === 'es' ? 'Sin costo de plataforma' : 'No platform fees'}
-            </Text>
+            <CheckCircle2 size={18} color={COLORS.success} />
+            <Text style={styles.benefitText}>{t.benefit1}</Text>
           </View>
           
           <View style={styles.benefitRow}>
-            <CheckCircle size={18} color={COLORS.success} />
-            <Text style={styles.benefitText}>
-              {language === 'es' ? 'Leads pre-calificados con póliza' : 'Pre-qualified leads with policy'}
-            </Text>
+            <CheckCircle2 size={18} color={COLORS.success} />
+            <Text style={styles.benefitText}>{t.benefit2}</Text>
           </View>
           
           <View style={styles.benefitRow}>
-            <CheckCircle size={18} color={COLORS.success} />
-            <Text style={styles.benefitText}>
-              {language === 'es' ? 'Comunicación directa por WhatsApp' : 'Direct WhatsApp communication'}
-            </Text>
+            <CheckCircle2 size={18} color={COLORS.success} />
+            <Text style={styles.benefitText}>{t.benefit3}</Text>
           </View>
           
-          <View style={styles.benefitRow}>
-            <CheckCircle size={18} color={COLORS.success} />
-            <Text style={styles.benefitText}>
-              {language === 'es' ? 'Solo agentes licenciados en Texas' : 'Licensed Texas agents only'}
-            </Text>
+          <View style={[styles.benefitRow, { marginBottom: 0 }]}>
+            <CheckCircle2 size={18} color={COLORS.success} />
+            <Text style={styles.benefitText}>{t.benefit4}</Text>
           </View>
         </View>
 
@@ -185,27 +181,14 @@ export default function AgentsScreen() {
             onPress={handleJoinPress}
             activeOpacity={0.9}
           >
-            <LinearGradient
-              colors={[COLORS.primary, COLORS.primaryDark]}
-              style={styles.ctaGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Text style={styles.primaryCTAText}>
-                {language === 'es' ? 'Únete como Agente' : 'Join as an Agent'}
-              </Text>
-              <ArrowRight size={20} color="#FFFFFF" />
-            </LinearGradient>
+            <Text style={styles.primaryCTAText}>{t.joinCta}</Text>
+            <ArrowRight size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </Animated.View>
 
         <View style={styles.footerNote}>
-          <Shield size={16} color={COLORS.textMuted} />
-          <Text style={styles.footerText}>
-            {language === 'es'
-              ? 'Por ahora solo aceptamos agentes P&C con licencia activa en Texas.'
-              : 'Currently accepting Texas P&C licensed agents only.'}
-          </Text>
+          <Shield size={14} color={COLORS.textMuted} />
+          <Text style={styles.footerText}>{t.footer}</Text>
         </View>
       </ScrollView>
     </View>
@@ -221,27 +204,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
   heroSection: {
     alignItems: 'center',
     marginBottom: 32,
   },
   iconBadge: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: COLORS.primary + '20',
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    backgroundColor: COLORS.primaryGlow,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
   },
   heroTitle: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: "800" as const,
     color: COLORS.text,
-    letterSpacing: -1,
-    lineHeight: 40,
+    letterSpacing: -0.8,
+    lineHeight: 38,
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -257,18 +241,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   valuePropCard: {
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: COLORS.backgroundSecondary,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   valuePropIcon: {
-    width: 52,
-    height: 52,
+    width: 48,
+    height: 48,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
@@ -277,10 +261,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   valuePropTitle: {
-    fontSize: 16,
-    fontWeight: '700' as const,
+    fontSize: 15,
+    fontWeight: '600' as const,
     color: COLORS.text,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   valuePropDesc: {
     fontSize: 13,
@@ -288,7 +272,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   benefitsCard: {
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: COLORS.backgroundSecondary,
     borderRadius: 20,
     padding: 24,
     marginBottom: 28,
@@ -299,16 +283,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700' as const,
     color: COLORS.text,
-    marginBottom: 16,
+    marginBottom: 18,
   },
   benefitRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   benefitText: {
-    fontSize: 14,
+    fontSize: 15,
     color: COLORS.textSecondary,
     flex: 1,
   },
@@ -316,34 +300,32 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   primaryCTA: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 12,
-  },
-  ctaGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 28,
     gap: 10,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
   },
   primaryCTAText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700' as const,
     color: '#FFFFFF',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   footerNote: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 16,
+    paddingVertical: 8,
   },
   footerText: {
     fontSize: 12,

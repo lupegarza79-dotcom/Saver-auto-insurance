@@ -8,7 +8,6 @@ import { Globe } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { AppProvider, useApp } from "@/contexts/AppContext";
 import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
-import Colors from "@/constants/colors";
 import { trpc, trpcClient } from "@/lib/trpc";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -35,12 +34,12 @@ function HeaderLanguageButton() {
         gap: 4,
         paddingHorizontal: 10,
         paddingVertical: 6,
-        backgroundColor: '#1E293B',
+        backgroundColor: '#F1F5F9',
         borderRadius: 8,
         marginRight: 8,
       }}
     >
-      <Globe size={14} color="#94A3B8" />
+      <Globe size={14} color="#64748B" />
     </TouchableOpacity>
   );
 }
@@ -54,10 +53,11 @@ function RootLayoutNav() {
     <Stack
       screenOptions={{
         headerBackTitle: backTitle,
-        headerStyle: { backgroundColor: '#0F172A' },
-        headerTintColor: '#FFFFFF',
-        contentStyle: { backgroundColor: '#0F172A' },
+        headerStyle: { backgroundColor: '#FFFFFF' },
+        headerTintColor: '#0F172A',
+        contentStyle: { backgroundColor: '#FFFFFF' },
         headerRight: () => <HeaderLanguageButton />,
+        headerShadowVisible: false,
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -65,8 +65,6 @@ function RootLayoutNav() {
         name="agents"
         options={{
           title: language === 'es' ? 'Para Agentes' : 'For Agents',
-          headerStyle: { backgroundColor: '#0F172A' },
-          headerTintColor: '#FFFFFF',
         }}
       />
       
@@ -82,8 +80,6 @@ function RootLayoutNav() {
         options={{
           title: language === 'es' ? 'Kit de Emergencia' : 'Roadside Kit',
           presentation: 'modal',
-          headerStyle: { backgroundColor: Colors.danger },
-          headerTintColor: Colors.textInverse,
           headerRight: () => null,
         }}
       />
