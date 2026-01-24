@@ -159,7 +159,7 @@ export default function AgentOnboardingScreen() {
       Alert.alert(
         text.pendingTitle,
         text.pendingSubtitle,
-        [{ text: 'OK', onPress: () => router.replace('/(tabs)') }]
+        [{ text: 'OK', onPress: () => router.replace('/') }]
       );
     } catch (error) {
       console.error('[AgentOnboarding] Error:', error);
@@ -207,7 +207,7 @@ export default function AgentOnboardingScreen() {
             
             <TouchableOpacity 
               style={styles.homeButton}
-              onPress={() => router.replace('/(tabs)')}
+              onPress={() => router.replace('/')}
             >
               <Text style={styles.homeButtonText}>{text.goHome}</Text>
             </TouchableOpacity>

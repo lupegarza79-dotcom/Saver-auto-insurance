@@ -35,12 +35,12 @@ function HeaderLanguageButton() {
         gap: 4,
         paddingHorizontal: 10,
         paddingVertical: 6,
-        backgroundColor: Colors.surfaceLight,
+        backgroundColor: '#1E293B',
         borderRadius: 8,
         marginRight: 8,
       }}
     >
-      <Globe size={14} color={Colors.secondary} />
+      <Globe size={14} color="#94A3B8" />
     </TouchableOpacity>
   );
 }
@@ -54,13 +54,22 @@ function RootLayoutNav() {
     <Stack
       screenOptions={{
         headerBackTitle: backTitle,
-        headerStyle: { backgroundColor: Colors.surface },
-        headerTintColor: Colors.text,
-        contentStyle: { backgroundColor: Colors.background },
+        headerStyle: { backgroundColor: '#0F172A' },
+        headerTintColor: '#FFFFFF',
+        contentStyle: { backgroundColor: '#0F172A' },
         headerRight: () => <HeaderLanguageButton />,
       }}
     >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="agents"
+        options={{
+          title: language === 'es' ? 'Para Agentes' : 'For Agents',
+          headerStyle: { backgroundColor: '#0F172A' },
+          headerTintColor: '#FFFFFF',
+        }}
+      />
+      
       <Stack.Screen
         name="auth"
         options={{

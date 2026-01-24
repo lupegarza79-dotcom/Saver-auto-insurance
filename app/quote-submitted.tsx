@@ -65,7 +65,7 @@ export default function QuoteSubmittedScreen() {
 
                 <TouchableOpacity
                     style={styles.button}
-                    onPress={() => router.replace('/(tabs)')}
+                    onPress={() => router.replace('/')}
                 >
                     <Text style={styles.buttonText}>{text.button}</Text>
                 </TouchableOpacity>
