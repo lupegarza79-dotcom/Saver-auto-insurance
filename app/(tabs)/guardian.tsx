@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Modal, TextInput, Platform } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,9 +7,6 @@ import {
   Bell, 
   Clock,
   AlertTriangle,
-  Plus,
-  X,
-  Check,
   Sparkles,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -37,15 +34,10 @@ const COLORS = {
 };
 
 export default function PaymentReminderScreen() {
-  const { language, t, reminders, policies, snoozeReminder, markReminderPaid, addReminder } = useApp();
+  const { language, t, reminders, policies, snoozeReminder, markReminderPaid } = useApp();
   const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const tabBarHeight = Platform.OS === 'web' ? 60 : 80;
-  const fabBottom = Math.max(16, tabBarHeight + insets.bottom + 12);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [carrierName, setCarrierName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [frequency, setFrequency] = useState<'monthly' | 'biannual' | 'yearly'>('monthly');
   
   const isWideScreen = windowWidth > 768;
 
@@ -79,38 +71,6 @@ export default function PaymentReminderScreen() {
     snoozeReminder(id, 30);
   };
 
-  const handleAddPayment = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    setShowAddModal(true);
-  };
-
-  const handleSaveReminder = () => {
-    if (!carrierName.trim()) return;
-    
-    const reminder = {
-      id: `rem_${Date.now()}`,
-      policyId: policies[0]?.id || 'manual',
-      type: 'payment' as const,
-      dueAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      amount: parseFloat(amount) || 0,
-      channel: 'whatsapp' as const,
-      status: 'pending' as const,
-      carrierName: carrierName,
-    };
-    
-    addReminder(reminder);
-    setShowAddModal(false);
-    setCarrierName('');
-    setAmount('');
-    setFrequency('monthly');
-    
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -134,7 +94,7 @@ export default function PaymentReminderScreen() {
 
       <ScrollView 
         style={styles.content}
-        contentContainerStyle={[styles.contentContainer, { paddingBottom: fabBottom + 100 }]}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: tabBarHeight + insets.bottom + 20 }]}
         showsVerticalScrollIndicator={false}
       >
         {nextPayment && daysUntilPayment !== null && (
@@ -185,10 +145,11 @@ export default function PaymentReminderScreen() {
               <Bell size={32} color={COLORS.primary} />
             </View>
             <Text style={styles.emptyTitle}>{text.empty}</Text>
-            <TouchableOpacity style={styles.emptyButton} onPress={handleAddPayment}>
-              <Plus size={18} color="#FFFFFF" />
-              <Text style={styles.emptyButtonText}>{text.addCta}</Text>
-            </TouchableOpacity>
+            <Text style={styles.emptySubtitle}>
+              {language === 'es' 
+                ? 'Los recordatorios aparecerán aquí cuando agregues pólizas.' 
+                : 'Reminders will appear here when you add policies.'}
+            </Text>
           </View>
         ) : (
           <View style={styles.listContainer}>
@@ -218,96 +179,6 @@ export default function PaymentReminderScreen() {
           <Text style={styles.infoText}>{text.noSpam}</Text>
         </View>
       </ScrollView>
-
-      {allReminders.length > 0 && (
-        <TouchableOpacity 
-          style={[styles.fab, { bottom: fabBottom }]}
-          onPress={handleAddPayment}
-          activeOpacity={0.9}
-        >
-          <Plus size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-      )}
-
-      <Modal
-        visible={showAddModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowAddModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.addModal}>
-            <View style={styles.addModalHeader}>
-              <Text style={styles.addModalTitle}>{text.addTitle}</Text>
-              <TouchableOpacity 
-                style={styles.closeButton}
-                onPress={() => setShowAddModal(false)}
-              >
-                <X size={20} color={COLORS.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{text.carrier}</Text>
-              <TextInput
-                style={styles.textInput}
-                value={carrierName}
-                onChangeText={setCarrierName}
-                placeholder={language === 'es' ? 'Ej: Progressive' : 'e.g. Progressive'}
-                placeholderTextColor={COLORS.textMuted}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{text.amount}</Text>
-              <TextInput
-                style={styles.textInput}
-                value={amount}
-                onChangeText={setAmount}
-                placeholder="$"
-                placeholderTextColor={COLORS.textMuted}
-                keyboardType="numeric"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{text.frequency}</Text>
-              <View style={styles.frequencyRow}>
-                {[
-                  { value: 'monthly' as const, label: text.freqMonthly },
-                  { value: 'biannual' as const, label: text.freqSix },
-                  { value: 'yearly' as const, label: text.freqYearly },
-                ].map((option) => (
-                  <TouchableOpacity
-                    key={option.value}
-                    style={[
-                      styles.frequencyOption,
-                      frequency === option.value && styles.frequencyOptionActive
-                    ]}
-                    onPress={() => setFrequency(option.value)}
-                  >
-                    {frequency === option.value && <Check size={14} color="#FFFFFF" />}
-                    <Text style={[
-                      styles.frequencyText,
-                      frequency === option.value && styles.frequencyTextActive
-                    ]}>
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.saveButton, !carrierName.trim() && styles.saveButtonDisabled]}
-              onPress={handleSaveReminder}
-              disabled={!carrierName.trim()}
-            >
-              <Text style={styles.saveButtonText}>{text.save}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -479,27 +350,14 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600' as const,
     color: COLORS.textSecondary,
-    marginBottom: 24,
+    marginBottom: 8,
     textAlign: 'center',
   },
-  emptyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 14,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  emptyButtonText: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
+  emptySubtitle: {
+    fontSize: 14,
+    color: COLORS.textMuted,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   infoCard: {
     flexDirection: 'row',
@@ -524,121 +382,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     lineHeight: 20,
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  addModal: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 24,
-    padding: 24,
-    width: '100%',
-    maxWidth: 400,
-  },
-  addModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  addModalTitle: {
-    fontSize: 22,
-    fontWeight: '700' as const,
-    color: COLORS.text,
-  },
-  closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: COLORS.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: COLORS.text,
-    marginBottom: 8,
-  },
-  textInput: {
-    backgroundColor: COLORS.surfaceSecondary,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: COLORS.text,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  frequencyRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  frequencyOption: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: COLORS.surfaceSecondary,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  frequencyOptionActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  frequencyText: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: COLORS.textSecondary,
-  },
-  frequencyTextActive: {
-    color: '#FFFFFF',
-  },
-  saveButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.primary,
-    paddingVertical: 18,
-    borderRadius: 14,
-    marginTop: 8,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  saveButtonDisabled: {
-    opacity: 0.5,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#FFFFFF',
   },
 });

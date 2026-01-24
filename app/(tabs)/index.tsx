@@ -115,7 +115,7 @@ export default function HomeScreen() {
             : 'Upload your policy. Get real quotes. No spam calls.'}
         </Text>
 
-        <Animated.View style={{ transform: [{ scale: ctaScale }], width: '100%', marginTop: 12 }}>
+        <Animated.View style={{ transform: [{ scale: ctaScale }], width: '100%', marginTop: 16 }}>
           <TouchableOpacity
             style={styles.primaryCTA}
             onPress={handlePrimaryCTA}
@@ -227,8 +227,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
   logoContainer: {
     flexDirection: 'row',
@@ -253,21 +253,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 4,
+    paddingHorizontal: 20,
+    paddingTop: 8,
   },
   heroTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "800" as const,
     color: COLORS.text,
     letterSpacing: -1,
-    lineHeight: 32,
-    marginBottom: 6,
+    lineHeight: 34,
+    marginBottom: 8,
   },
   heroSubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: COLORS.textSecondary,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   primaryCTA: {
     borderRadius: 16,
@@ -295,8 +295,8 @@ const styles = StyleSheet.create({
   trustChipsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 14,
+    gap: 10,
+    marginTop: 16,
     justifyContent: 'center',
   },
   trustChip: {
@@ -333,9 +333,9 @@ const styles = StyleSheet.create({
   },
   howItWorksCard: {
     backgroundColor: COLORS.backgroundLight,
-    borderRadius: 14,
-    padding: 14,
-    marginTop: 14,
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
