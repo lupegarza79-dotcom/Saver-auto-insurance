@@ -13,7 +13,7 @@ import {
   Modal,
   Linking,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -705,8 +705,11 @@ export default function UploadDocumentScreen() {
     }
   };
 
+  const headerTitle = language === 'es' ? 'Subir Póliza' : 'Upload Policy';
+
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
+      <Stack.Screen options={{ title: headerTitle, headerBackTitle: language === 'es' ? 'Atrás' : 'Back' }} />
       {Platform.OS === 'web' && (
         <input
           ref={webFileInputRef as React.RefObject<HTMLInputElement>}

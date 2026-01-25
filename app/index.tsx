@@ -82,6 +82,7 @@ export default function HomeScreen() {
     trustFree: language === 'es' ? 'GRATIS' : 'FREE',
     trustEasy: language === 'es' ? 'FÁCIL' : 'EASY',
     trustFast: language === 'es' ? 'RÁPIDO' : 'FAST',
+    trustWhatsApp: language === 'es' ? 'Solo WhatsApp' : 'WhatsApp only',
     agentCta: language === 'es' ? 'Soy Agente' : "I'm an Agent",
   };
 
@@ -108,6 +109,8 @@ export default function HomeScreen() {
         <Text style={styles.trustChip}>{t.trustEasy}</Text>
         <Text style={styles.trustDot}>•</Text>
         <Text style={styles.trustChip}>{t.trustFast}</Text>
+        <Text style={styles.trustDot}>•</Text>
+        <Text style={styles.trustChipWhatsApp}>{t.trustWhatsApp}</Text>
       </View>
 
       <View style={styles.actionsContainer}>
@@ -228,6 +231,11 @@ const styles = StyleSheet.create({
   trustDot: {
     fontSize: 12,
     color: COLORS.textMuted,
+  },
+  trustChipWhatsApp: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#25D366',
   },
   actionsContainer: {
     flex: 1,
