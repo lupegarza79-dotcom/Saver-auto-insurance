@@ -497,8 +497,9 @@ export const leadStore = {
     if (isSupabaseConfigured()) {
       return supabaseStore.create(data);
     }
-    console.warn('[LEAD_STORE] ⚠️ Supabase not configured - using memory fallback (data will be lost on restart)');
-    return memoryStore.create(data);
+    // PRODUCTION: Throw error if Supabase not configured
+    console.error('[LEAD_STORE] ❌ CRITICAL: Supabase not configured. Leads cannot be saved.');
+    throw new Error('SUPABASE_NOT_CONFIGURED: Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to save leads.');
   },
 
   async get(id: string): Promise<LeadRecord | undefined> {
