@@ -36,7 +36,7 @@ export default function HomeScreen() {
     if (isEs) {
       return {
         title: "Ahorra en\nSeguro de Auto",
-        subtitle: "Sube tu póliza o cotiza en 1–2 minutos.\nGRATIS • FÁCIL • RÁPIDO",
+        subtitle: "Sube tu póliza o responde unas preguntas.\nCotizaciones reales. Sin spam.\nGRATIS • FÁCIL • RÁPIDO",
         cta1: "Obtener Cotización",
         cta1Sub: "1–2 minutos",
         cta2: "Subir Póliza",
@@ -48,7 +48,7 @@ export default function HomeScreen() {
     }
     return {
       title: "Save on\nAuto Insurance",
-      subtitle: "Upload your policy or get a quote in 1–2 minutes.\nFREE • EASY • FAST",
+      subtitle: "Upload your policy or answer a few questions.\nGet real quotes. No spam.\nFREE • EASY • FAST",
       cta1: "Get Quote",
       cta1Sub: "1–2 min",
       cta2: "Upload Policy",
