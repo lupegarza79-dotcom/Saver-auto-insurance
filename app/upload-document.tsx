@@ -769,6 +769,16 @@ export default function UploadDocumentScreen() {
         <View style={[styles.contentInner, isWeb && styles.webContentInner]}>
           <Text style={styles.bodyText}>{text.body}</Text>
 
+          {isWeb && (
+            <View style={styles.webMobileHint}>
+              <Text style={styles.webMobileHintText}>
+                {language === 'es' 
+                  ? '📱 En móvil, abre esta página en tu teléfono para usar la cámara.'
+                  : '📱 On mobile, open this page on your phone to use camera.'}
+              </Text>
+            </View>
+          )}
+
           <TouchableOpacity
             style={styles.mainUploadButton}
             onPress={() => {
@@ -896,25 +906,26 @@ export default function UploadDocumentScreen() {
         </SafeAreaView>
       )}
 
-      <Modal
-        visible={showActionSheet}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowActionSheet(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity
-            style={styles.modalBackdrop}
-            activeOpacity={1}
-            onPress={() => setShowActionSheet(false)}
-          />
-          <View
-            style={styles.actionSheet}
-            onStartShouldSetResponder={() => true}
-          >
-            <Text style={styles.actionSheetTitle}>{text.addPolicy}</Text>
+{/* Action sheet only for native - web uses direct file picker */}
+      {Platform.OS !== 'web' && (
+        <Modal
+          visible={showActionSheet}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowActionSheet(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <TouchableOpacity
+              style={styles.modalBackdrop}
+              activeOpacity={1}
+              onPress={() => setShowActionSheet(false)}
+            />
+            <View
+              style={styles.actionSheet}
+              onStartShouldSetResponder={() => true}
+            >
+              <Text style={styles.actionSheetTitle}>{text.addPolicy}</Text>
 
-            {Platform.OS !== 'web' && (
               <TouchableOpacity
                 style={styles.actionSheetOption}
                 onPress={() => {
@@ -928,51 +939,51 @@ export default function UploadDocumentScreen() {
                 </View>
                 <Text style={styles.actionSheetOptionText}>{text.camera}</Text>
               </TouchableOpacity>
-            )}
 
-            <TouchableOpacity
-              style={styles.actionSheetOption}
-              onPress={() => {
-                console.log('[UPLOAD] Library option pressed');
-                pickImage('library');
-              }}
-              activeOpacity={0.7}
-            >
-              <View style={styles.actionSheetIcon}>
-                <ImageIcon size={22} color={COLORS.primaryBlue} />
-              </View>
-              <Text style={styles.actionSheetOptionText}>{text.library}</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionSheetOption}
+                onPress={() => {
+                  console.log('[UPLOAD] Library option pressed');
+                  pickImage('library');
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.actionSheetIcon}>
+                  <ImageIcon size={22} color={COLORS.primaryBlue} />
+                </View>
+                <Text style={styles.actionSheetOptionText}>{text.library}</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionSheetOption}
-              onPress={() => {
-                console.log('[UPLOAD] Files option pressed');
-                handlePickDocument();
-              }}
-              activeOpacity={0.7}
-            >
-              <View style={styles.actionSheetIcon}>
-                <FolderOpen size={22} color={COLORS.primaryBlue} />
-              </View>
-              <Text style={styles.actionSheetOptionText}>{text.files}</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionSheetOption}
+                onPress={() => {
+                  console.log('[UPLOAD] Files option pressed');
+                  handlePickDocument();
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.actionSheetIcon}>
+                  <FolderOpen size={22} color={COLORS.primaryBlue} />
+                </View>
+                <Text style={styles.actionSheetOptionText}>{text.files}</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionSheetCancel}
-              onPress={() => {
-                console.log('[UPLOAD] Cancel pressed');
-                setShowActionSheet(false);
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.actionSheetCancelText}>
-                {language === 'es' ? 'Cancelar' : 'Cancel'}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionSheetCancel}
+                onPress={() => {
+                  console.log('[UPLOAD] Cancel pressed');
+                  setShowActionSheet(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.actionSheetCancelText}>
+                  {language === 'es' ? 'Cancelar' : 'Cancel'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
 
       <Modal
         visible={showConsentModal}
@@ -1456,5 +1467,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.primaryBlue,
     fontWeight: '500' as const,
+  },
+  webMobileHint: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  webMobileHintText: {
+    fontSize: 13,
+    color: '#1E40AF',
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });
