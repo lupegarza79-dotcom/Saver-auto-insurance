@@ -35,8 +35,8 @@ export default function HomeScreen() {
   const copy = useMemo(() => {
     if (isEs) {
       return {
-        title: "Seguro de Auto\nSimplificado",
-        subtitle: "Cotiza o sube tu póliza actual.\nSin llamadas. Sin spam.",
+        title: "Ahorra en\nSeguro de Auto",
+        subtitle: "Sube tu póliza o cotiza en 1–2 minutos.\nGRATIS • FÁCIL • RÁPIDO",
         cta1: "Obtener Cotización",
         cta1Sub: "1–2 minutos",
         cta2: "Subir Póliza",
@@ -47,8 +47,8 @@ export default function HomeScreen() {
       };
     }
     return {
-      title: "Auto Insurance\nSimplified",
-      subtitle: "Get a quote or upload your current policy.\nNo calls. No spam.",
+      title: "Save on\nAuto Insurance",
+      subtitle: "Upload your policy or get a quote in 1–2 minutes.\nFREE • EASY • FAST",
       cta1: "Get Quote",
       cta1Sub: "1–2 min",
       cta2: "Upload Policy",
