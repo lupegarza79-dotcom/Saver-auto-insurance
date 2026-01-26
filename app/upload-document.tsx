@@ -834,7 +834,7 @@ export default function UploadDocumentScreen() {
               if (Platform.OS !== 'web') {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
-              router.push('/ai-assistant?mode=intake' as any);
+              router.push('/quote-form');
             }}
             activeOpacity={0.7}
           >

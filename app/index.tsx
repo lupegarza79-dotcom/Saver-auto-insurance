@@ -77,7 +77,7 @@ export default function HomeScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    router.push("/ai-assistant?mode=intake");
+    router.push("/quote-form");
   };
 
   const handleAgentPress = () => {

@@ -212,7 +212,7 @@ export default function QuotesScreen() {
                     </Text>
                     <TouchableOpacity 
                       style={styles.completeInfoButton}
-                      onPress={() => router.push('/ai-assistant')}
+                      onPress={() => router.push('/_future/ai-assistant')}
                     >
                       <Text style={styles.completeInfoButtonText}>
                         {t.quotes?.selectQuote ? 'Complete Info' : 'Complete My Info'}
