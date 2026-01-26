@@ -1,19 +1,23 @@
 import { httpLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import superjson from "superjson";
+import { Platform } from "react-native";
 
 import type { AppRouter } from "@/backend/trpc/app-router";
 
 export const trpc = createTRPCReact<AppRouter>();
 
 const getBaseUrl = () => {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  
   const url = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-
   if (!url) {
-    console.warn('[TRPC] EXPO_PUBLIC_RORK_API_BASE_URL not set, using relative URL');
+    console.warn('[TRPC] EXPO_PUBLIC_RORK_API_BASE_URL not set for native');
     return '';
   }
-
+  
   return url;
 };
 
