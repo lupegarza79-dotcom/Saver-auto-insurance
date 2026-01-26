@@ -188,7 +188,7 @@ export default function QuoteFormScreen() {
         return true;
       }
       case 'vehicleCount':
-        return formData.vehicleCount >= 1 && formData.vehicleCount <= 3;
+        return formData.vehicleCount >= 1 && formData.vehicleCount <= 4;
       case 'vin': {
         const currentVin = formData.vins[currentVinIndex] || '';
         const cleanVin = currentVin.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -368,7 +368,7 @@ export default function QuoteFormScreen() {
             <Text style={styles.stepTitle}>{copy.vehicleCountTitle}</Text>
             <Text style={styles.stepSubtitle}>{copy.vehicleCountSubtitle}</Text>
             <View style={styles.countSelector}>
-              {[1, 2, 3].map((count) => (
+              {[1, 2, 3, 4].map((count) => (
                 <Pressable
                   key={count}
                   style={[
