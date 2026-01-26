@@ -33,7 +33,7 @@ import {
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { trpc } from "@/lib/trpc";
+import { supabase } from "@/lib/supabase";
 
 const COLORS = {
   background: '#F7F9FC',
@@ -68,7 +68,7 @@ export default function AgentsScreen() {
 
   const ctaScale = useRef(new Animated.Value(1)).current;
 
-  const submitMutation = trpc.agentApplications.submit.useMutation();
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const animatePress = useCallback((scale: Animated.Value) => {
     Animated.sequence([
@@ -120,24 +120,41 @@ export default function AgentsScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
+    setIsSubmitting(true);
+
     try {
-      await submitMutation.mutateAsync({
-        fullName: fullName.trim(),
+      const payload = {
+        full_name: fullName.trim(),
         phone: phone.trim(),
         email: email.trim(),
         licensed,
         states: states.trim(),
-        yearsOfExperience: yearsOfExperience.trim(),
-        notes: notes.trim() || undefined,
-      });
+        years_experience: yearsOfExperience ? Number(yearsOfExperience) : null,
+        notes: notes.trim() || null,
+        created_at: new Date().toISOString(),
+      };
 
+      console.log('[AGENTS] Submitting to Supabase:', payload);
+      const { error } = await supabase.from('agent_applications').insert(payload);
+
+      if (error) {
+        console.error('[AGENTS] Supabase insert error:', error);
+        setIsSubmitting(false);
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+        return;
+      }
+
+      console.log('[AGENTS] Application submitted successfully');
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
 
       setSubmitted(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[AGENTS] Error submitting application:', error);
+      setIsSubmitting(false);
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
@@ -449,12 +466,12 @@ export default function AgentsScreen() {
 
           <Animated.View style={{ transform: [{ scale: ctaScale }] }}>
             <TouchableOpacity
-              style={[styles.submitButton, submitMutation.isPending && styles.submitButtonDisabled]}
+              style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
               onPress={handleSubmit}
               activeOpacity={0.9}
-              disabled={submitMutation.isPending}
+              disabled={isSubmitting}
             >
-              {submitMutation.isPending ? (
+              {isSubmitting ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <Text style={styles.submitButtonText}>{t.submit}</Text>

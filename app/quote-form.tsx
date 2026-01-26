@@ -16,7 +16,7 @@ import { Stack, useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, Check, Globe } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/contexts/AppContext';
-import { trpc } from '@/lib/trpc';
+import { supabase } from '@/lib/supabase';
 
 type WizardStep = 'phone' | 'name' | 'zip' | 'vehicleCount' | 'vin' | 'coverage';
 
@@ -44,7 +44,7 @@ const COLORS = {
 };
 
 export default function QuoteFormScreen() {
-  const { language, setLanguage, setConsentGiven, user } = useApp();
+  const { language, setLanguage, setConsentGiven } = useApp();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -136,18 +136,7 @@ export default function QuoteFormScreen() {
     };
   }, [isEs]);
 
-  const submitIntakeMutation = trpc.intake.submit.useMutation({
-    onSuccess: () => {
-      console.log('[QUOTE_FORM] Lead submitted successfully');
-      setConsentGiven(true);
-      router.push('/quote-submitted');
-    },
-    onError: (err) => {
-      console.error('[QUOTE_FORM] Submit error:', err);
-      setIsSubmitting(false);
-      Alert.alert(isEs ? 'Error' : 'Error', copy.submitError);
-    },
-  });
+  
 
   const steps = useMemo<WizardStep[]>(() => ['phone', 'name', 'zip', 'vehicleCount', 'vin', 'coverage'], []);
   const currentStepIndex = steps.indexOf(step);
@@ -268,23 +257,36 @@ export default function QuoteFormScreen() {
     }
 
     try {
-      await submitIntakeMutation.mutateAsync({
-        userId: user?.id || `user_${Date.now()}`,
-        intake: {
-          phone: formData.phone.replace(/\D/g, ''),
-          insuredFullName: formData.fullName.trim(),
-          garagingAddress: { zip: formData.zip.replace(/\D/g, ''), state: 'TX' },
-          contactPreference: 'whatsapp',
-          language: isEs ? 'es' : 'en',
-          consentContactAllowed: true,
-          vehicles: formData.vins.map(vin => ({ vin })),
-          coverageType: formData.coverage === 'liability' ? 'minimum' : 'full',
-        },
-      });
-    } catch (err) {
+      const payload = {
+        phone: formData.phone.replace(/\D/g, ''),
+        full_name: formData.fullName.trim(),
+        zip: formData.zip.replace(/\D/g, ''),
+        vehicles: formData.vins.map((v) => ({ vin: v.trim() })),
+        coverage_type: formData.coverage === 'liability' ? 'liability' : 'full',
+        source: 'quote-form',
+        status: 'new',
+        created_at: new Date().toISOString(),
+      };
+
+      console.log('[QUOTE_FORM] Submitting to Supabase:', payload);
+      const { error } = await supabase.from('leads').insert(payload);
+
+      if (error) {
+        console.error('[QUOTE_FORM] Supabase insert error:', error);
+        setIsSubmitting(false);
+        Alert.alert(isEs ? 'Error' : 'Error', copy.submitError);
+        return;
+      }
+
+      console.log('[QUOTE_FORM] Lead submitted successfully');
+      setConsentGiven(true);
+      router.push('/quote-submitted');
+    } catch (err: any) {
       console.error('[QUOTE_FORM] Submit failed:', err);
+      setIsSubmitting(false);
+      Alert.alert(isEs ? 'Error' : 'Error', err?.message || copy.submitError);
     }
-  }, [formData, isEs, user, submitIntakeMutation, validateCurrentStep]);
+  }, [formData, isEs, validateCurrentStep, setConsentGiven, router, copy.submitError]);
 
   const updateVin = useCallback((text: string) => {
     const updatedVins = [...formData.vins];
