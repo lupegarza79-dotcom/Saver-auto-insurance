@@ -167,8 +167,6 @@ export default function HomeScreen() {
           <Text style={styles.footerVersionText}>{copy.version}</Text>
         </View>
       </View>
-
-      
     </View>
   );
 }

@@ -766,9 +766,6 @@ export default function UploadDocumentScreen() {
           }}
         />
       )}
-      {/* Custom header removed to use system header with Language button */}
-
-
       <ScrollView
         style={styles.content}
         contentContainerStyle={[styles.contentContainer, isWeb && styles.webContentContainer]}
