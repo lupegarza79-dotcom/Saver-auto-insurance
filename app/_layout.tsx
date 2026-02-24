@@ -89,6 +89,18 @@ function RootLayoutNav() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="ops"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="retention"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

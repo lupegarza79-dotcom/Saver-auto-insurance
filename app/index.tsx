@@ -19,6 +19,8 @@ import {
   Search,
   Bell,
   Gift,
+  BarChart3,
+  Wallet,
 } from "lucide-react-native";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import TrustBadges from "@/components/TrustBadges";
@@ -135,6 +137,16 @@ export default function HomeScreen() {
 
   const handleTermsPress = () => {
     router.push("/modal?type=terms" as any);
+  };
+
+  const handleOpsPress = () => {
+    if (Platform.OS !== "web") Haptics.selectionAsync();
+    router.push("/ops" as any);
+  };
+
+  const handleRetentionPress = () => {
+    if (Platform.OS !== "web") Haptics.selectionAsync();
+    router.push("/retention" as any);
   };
 
   const steps = [
@@ -269,6 +281,33 @@ export default function HomeScreen() {
               </View>
             ))}
           </View>
+        </View>
+
+        <View style={styles.quickActionsRow}>
+          <Pressable
+            onPress={handleRetentionPress}
+            style={({ pressed }) => [styles.quickActionCard, pressed && { opacity: 0.85 }]}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: SAVER.accentLight }]}>
+              <Wallet size={18} color={SAVER.accent} strokeWidth={2.5} />
+            </View>
+            <Text style={styles.quickActionLabel}>
+              {isEs ? 'Mi Vault' : 'My Vault'}
+            </Text>
+            <ChevronRight size={14} color="rgba(255,255,255,0.3)" />
+          </Pressable>
+          <Pressable
+            onPress={handleOpsPress}
+            style={({ pressed }) => [styles.quickActionCard, pressed && { opacity: 0.85 }]}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(124,58,237,0.12)' }]}>
+              <BarChart3 size={18} color="#7C3AED" strokeWidth={2.5} />
+            </View>
+            <Text style={styles.quickActionLabel}>
+              {isEs ? 'Operaciones' : 'Operations'}
+            </Text>
+            <ChevronRight size={14} color="rgba(255,255,255,0.3)" />
+          </Pressable>
         </View>
 
         <Pressable
@@ -570,6 +609,35 @@ const styles = StyleSheet.create({
     height: 12,
     backgroundColor: "rgba(255,255,255,0.06)",
     borderRadius: 1,
+  },
+  quickActionsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 12,
+  },
+  quickActionCard: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    borderRadius: 14,
+    padding: 14,
+  },
+  quickActionIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quickActionLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: SAVER.text,
   },
   referralCard: {
     flexDirection: "row",
