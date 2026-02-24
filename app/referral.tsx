@@ -10,6 +10,7 @@ import {
   Share,
   Alert,
   ScrollView,
+  Linking,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,13 +21,16 @@ import {
   Copy,
   Share2,
   MessageCircle,
-  ChevronLeft,
   Check,
   Heart,
   Sparkles,
+  Image as ImageIcon,
+  Send,
+  ChevronRight,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/contexts/AppContext';
+import { submitReferral } from '@/services/IntakeService';
 
 const DARK = {
   bg: '#0A1120',
@@ -42,6 +46,8 @@ const DARK = {
   greenLight: 'rgba(0,201,111,0.12)',
   orange: '#FF9500',
   orangeLight: 'rgba(255,149,0,0.12)',
+  whatsapp: '#25D366',
+  whatsappLight: 'rgba(37,211,102,0.12)',
 };
 
 const WHATSAPP_NUMBER = '+19567738844';
@@ -49,7 +55,7 @@ const WHATSAPP_NUMBER = '+19567738844';
 export default function ReferralScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { language } = useApp();
+  const { language, user } = useApp();
   const [referralName, setReferralName] = useState('');
   const [referralPhone, setReferralPhone] = useState('');
   const [sent, setSent] = useState(false);
@@ -64,22 +70,25 @@ export default function ReferralScreen() {
         headerTitle: 'Refiere a un Amigo',
         back: 'Atrás',
         heroTitle: 'Comparte\nel Ahorro',
-        heroSubtitle: 'Recomienda Saver a alguien que necesite mejor precio en su seguro de auto.',
-        shareLinkTitle: 'Comparte tu enlace',
-        shareLinkDesc: 'Envía este enlace por WhatsApp o texto.',
+        heroSubtitle: 'Recomienda Saver a familia o amigos que necesiten mejor precio en su seguro de auto.',
+        shareFamilyTitle: 'Comparte con familia y amigos',
+        shareFamilyDesc: 'Envía este enlace por WhatsApp o texto.',
         copyLink: 'Copiar enlace',
         copied: 'Copiado',
         shareButton: 'Compartir',
+        whatsappShare: 'Enviar por WhatsApp',
         orRefer: 'o refiere directamente',
         nameLabel: 'Nombre de tu referido',
         namePlaceholder: 'Juan Pérez',
         phoneLabel: 'Teléfono de tu referido',
         phonePlaceholder: '(555) 123-4567',
         sendReferral: 'Enviar Referido',
-        whatsappCta: 'Enviar por WhatsApp',
         benefit1: 'Tu amigo obtiene cotización gratis',
         benefit2: 'Solo lo contactamos si hay ahorro real',
         benefit3: 'Sin spam, sin llamadas en frío',
+        flyerTitle: '¿Necesitas un flyer para redes sociales?',
+        flyerDesc: 'Próximamente: descarga un flyer personalizado para compartir en Instagram, Facebook o TikTok.',
+        flyerCta: 'Próximamente',
         sentTitle: '¡Referido Enviado!',
         sentMessage: 'Le enviaremos un mensaje a tu referido. Solo lo contactaremos si encontramos ahorro real.',
         sendAnother: 'Referir a otro amigo',
@@ -90,22 +99,25 @@ export default function ReferralScreen() {
       headerTitle: 'Refer a Friend',
       back: 'Back',
       heroTitle: 'Share the\nSavings',
-      heroSubtitle: 'Recommend Saver to someone who needs a better deal on auto insurance.',
-      shareLinkTitle: 'Share your link',
-      shareLinkDesc: 'Send this link via WhatsApp or text.',
+      heroSubtitle: 'Recommend Saver to family or friends who need a better deal on auto insurance.',
+      shareFamilyTitle: 'Share with family & friends',
+      shareFamilyDesc: 'Send this link via WhatsApp or text.',
       copyLink: 'Copy link',
       copied: 'Copied!',
       shareButton: 'Share',
+      whatsappShare: 'Send via WhatsApp',
       orRefer: 'or refer directly',
       nameLabel: "Your friend's name",
       namePlaceholder: 'John Smith',
       phoneLabel: "Your friend's phone",
       phonePlaceholder: '(555) 123-4567',
       sendReferral: 'Send Referral',
-      whatsappCta: 'Send via WhatsApp',
       benefit1: 'Your friend gets a free quote',
       benefit2: 'We only contact them if real savings exist',
       benefit3: 'No spam, no cold calls',
+      flyerTitle: 'Need a flyer for social media?',
+      flyerDesc: 'Coming soon: download a custom flyer to share on Instagram, Facebook, or TikTok.',
+      flyerCta: 'Coming Soon',
       sentTitle: 'Referral Sent!',
       sentMessage: "We'll reach out to your friend. We only contact them if we find real savings.",
       sendAnother: 'Refer another friend',
@@ -147,7 +159,18 @@ export default function ReferralScreen() {
     }
   }, [isEs, referralLink]);
 
-  const handleSendReferral = useCallback(() => {
+  const handleWhatsAppShare = useCallback(() => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    const message = isEs
+      ? `¡Hola! Te recomiendo Saver para ahorrar en tu seguro de auto. Solo te contactan si encuentran mejor precio. Sin spam. Checa aquí: ${referralLink}`
+      : `Hey! I recommend Saver for saving on auto insurance. They only contact you if they find a better price. No spam. Check it out: ${referralLink}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    Linking.openURL(url);
+  }, [isEs, referralLink]);
+
+  const handleSendReferral = useCallback(async () => {
     if (!referralName.trim() || referralPhone.replace(/\D/g, '').length < 10) {
       Alert.alert(
         isEs ? 'Información incompleta' : 'Incomplete info',
@@ -162,9 +185,23 @@ export default function ReferralScreen() {
       Animated.timing(scaleAnim, { toValue: 0.95, duration: 80, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 1, duration: 80, useNativeDriver: true }),
     ]).start();
+
     console.log('[REFERRAL] Sending referral:', { name: referralName, phone: referralPhone });
+
+    const result = await submitReferral({
+      referrerPhone: user?.phone,
+      referredName: referralName,
+      referredPhone: referralPhone,
+      language: isEs ? 'es' : 'en',
+      source: 'app_referral',
+    });
+
+    if (!result.success) {
+      console.log('[REFERRAL] Backend submit failed, continuing with local flow');
+    }
+
     setSent(true);
-  }, [referralName, referralPhone, isEs, scaleAnim]);
+  }, [referralName, referralPhone, isEs, scaleAnim, user?.phone]);
 
   const handleSendAnother = useCallback(() => {
     setReferralName('');
@@ -268,8 +305,8 @@ export default function ReferralScreen() {
         </View>
 
         <View style={styles.shareLinkCard}>
-          <Text style={styles.shareLinkTitle}>{copy.shareLinkTitle}</Text>
-          <Text style={styles.shareLinkDesc}>{copy.shareLinkDesc}</Text>
+          <Text style={styles.shareLinkTitle}>{copy.shareFamilyTitle}</Text>
+          <Text style={styles.shareLinkDesc}>{copy.shareFamilyDesc}</Text>
           <View style={styles.linkRow}>
             <Text style={styles.linkText} numberOfLines={1}>{referralLink}</Text>
             <Pressable
@@ -286,13 +323,37 @@ export default function ReferralScreen() {
               </Text>
             </Pressable>
           </View>
-          <Pressable
-            style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.9 }]}
-            onPress={handleShare}
-          >
-            <Share2 size={18} color="#FFFFFF" />
-            <Text style={styles.shareBtnText}>{copy.shareButton}</Text>
-          </Pressable>
+
+          <View style={styles.shareActions}>
+            <Pressable
+              style={({ pressed }) => [styles.whatsappShareBtn, pressed && { opacity: 0.9 }]}
+              onPress={handleWhatsAppShare}
+            >
+              <MessageCircle size={18} color="#FFFFFF" />
+              <Text style={styles.whatsappShareText}>{copy.whatsappShare}</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.genericShareBtn, pressed && { opacity: 0.9 }]}
+              onPress={handleShare}
+            >
+              <Share2 size={18} color={DARK.accent} />
+              <Text style={styles.genericShareText}>{copy.shareButton}</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.flyerCard}>
+          <View style={styles.flyerIconWrap}>
+            <ImageIcon size={20} color={DARK.orange} strokeWidth={2} />
+          </View>
+          <View style={styles.flyerTextWrap}>
+            <Text style={styles.flyerTitle}>{copy.flyerTitle}</Text>
+            <Text style={styles.flyerDesc}>{copy.flyerDesc}</Text>
+          </View>
+          <View style={styles.flyerBadge}>
+            <Text style={styles.flyerBadgeText}>{copy.flyerCta}</Text>
+          </View>
         </View>
 
         <View style={styles.dividerRow}>
@@ -335,7 +396,7 @@ export default function ReferralScreen() {
                 end={{ x: 1, y: 1 }}
                 style={styles.sendReferralGradient}
               >
-                <MessageCircle size={20} color="#FFFFFF" />
+                <Send size={20} color="#FFFFFF" />
                 <Text style={styles.sendReferralText}>{copy.sendReferral}</Text>
               </LinearGradient>
             </Pressable>
@@ -431,7 +492,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: DARK.border,
-    marginBottom: 20,
+    marginBottom: 14,
   },
   shareLinkTitle: {
     fontSize: 16,
@@ -477,19 +538,86 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: DARK.accent,
   },
-  shareBtn: {
+  shareActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  whatsappShareBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: DARK.accent,
+    backgroundColor: DARK.whatsapp,
     paddingVertical: 14,
     borderRadius: 12,
   },
-  shareBtnText: {
-    fontSize: 15,
+  whatsappShareText: {
+    fontSize: 14,
     fontWeight: '700' as const,
     color: '#FFFFFF',
+  },
+  genericShareBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: DARK.accentLight,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,102,255,0.2)',
+  },
+  genericShareText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: DARK.accent,
+  },
+  flyerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: DARK.orangeLight,
+    borderRadius: 14,
+    padding: 16,
+    gap: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,149,0,0.15)',
+  },
+  flyerIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,149,0,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flyerTextWrap: {
+    flex: 1,
+  },
+  flyerTitle: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: DARK.text,
+    marginBottom: 2,
+  },
+  flyerDesc: {
+    fontSize: 11,
+    color: DARK.textMuted,
+    lineHeight: 16,
+  },
+  flyerBadge: {
+    backgroundColor: 'rgba(255,149,0,0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  flyerBadgeText: {
+    fontSize: 10,
+    fontWeight: '700' as const,
+    color: DARK.orange,
+    letterSpacing: 0.5,
   },
   dividerRow: {
     flexDirection: 'row',

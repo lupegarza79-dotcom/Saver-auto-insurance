@@ -41,6 +41,7 @@ import {
   buildMissingFieldsSummary,
   QuoteInput,
 } from '@/utils/quoteReadiness';
+import { submitUploadIntake } from '@/services/IntakeService';
 
 const WHATSAPP_NUMBER = '+19567738844';
 
@@ -597,10 +598,44 @@ export default function UploadDocumentScreen() {
     console.log('[UPLOAD] Gate evaluation:', { ready, status, missingCount: missing.length });
     console.log('[UPLOAD] Missing fields:', missing.map(m => m.key));
 
-    // 5) Submit intake to backend (emits webhooks)
+    // 5) Submit intake via service adapter (single place for payload mapping)
     let leadId: string | undefined;
     try {
-      console.log('[UPLOAD] Submitting intake to backend...');
+      console.log('[UPLOAD] Submitting intake via service adapter...');
+      const adapterResult = await submitUploadIntake({
+        insuredFullName: intake.insuredFullName,
+        phone: intake.phone,
+        zip: intake.garagingAddress?.zip,
+        contactPreference: intake.contactPreference || 'whatsapp',
+        language: (intake.language || 'en') as 'en' | 'es',
+        consentGiven: intake.consentContactAllowed || false,
+        drivers: (intake.drivers || []).map(d => ({
+          fullName: d.fullName,
+          dob: d.dob,
+          idLast4: d.idLast4,
+        })),
+        vehicles: (intake.vehicles || []).map(v => ({
+          vin: v.vin,
+          year: v.year,
+          make: v.make,
+          model: v.model,
+        })),
+        coverageType: intake.coverageType,
+        liabilityLimits: intake.liabilityLimits,
+        collisionDeductible: intake.collisionDeductible,
+        compDeductible: intake.compDeductible,
+        currentCarrier: intake.currentCarrier,
+        currentPremium: intake.currentPremium,
+        policyExpiryDate: intake.policyExpiryDate,
+        currentPolicyDoc: intake.currentPolicyDoc,
+      });
+      console.log('[UPLOAD] Service adapter result:', adapterResult.success);
+    } catch (adapterErr) {
+      console.log('[UPLOAD] Service adapter failed, trying trpc fallback');
+    }
+
+    try {
+      console.log('[UPLOAD] Submitting intake to backend via trpc...');
       const intakeResult = await submitIntakeMutation.mutateAsync({
         userId: user?.id || `user_${Date.now()}`,
         intake: {
@@ -612,11 +647,8 @@ export default function UploadDocumentScreen() {
       console.log('[UPLOAD] Intake submitted successfully, leadId:', leadId, 'status:', intakeResult.status);
     } catch (error: any) {
       console.error('[UPLOAD] Failed to submit intake:', error?.message || error);
-      // Generate local leadId if backend fails - still continue with local flow
       leadId = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       console.log('[UPLOAD] Using local leadId:', leadId);
-      
-      // Show user-friendly error but don't block flow
       if (error?.message?.includes('<!DOCTYPE') || error?.message?.includes('not valid JSON')) {
         console.log('[UPLOAD] Backend temporarily unavailable, continuing with local flow');
       }

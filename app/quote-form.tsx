@@ -12,6 +12,7 @@ import {
   ScrollView,
   Modal,
   Animated,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
@@ -28,12 +29,14 @@ import {
   Shield,
   Users,
   Home,
-  Clock,
   CheckCircle,
+  MessageCircle,
+  PhoneCall,
+  MessageSquare,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/contexts/AppContext';
-import { supabase } from '@/lib/supabase';
+import { submitQuoteForm, type ContactPreference } from '@/services/IntakeService';
 
 type WizardStep =
   | 'phone'
@@ -45,6 +48,7 @@ type WizardStep =
   | 'vin'
   | 'coverage'
   | 'discounts'
+  | 'contactPref'
   | 'consent';
 
 interface DriverEntry {
@@ -64,6 +68,7 @@ interface FormData {
   currentlyInsured: boolean | null;
   insuredMonths: string | null;
   homeowner: boolean | null;
+  contactPreference: ContactPreference | null;
   consentGiven: boolean;
 }
 
@@ -82,6 +87,8 @@ const DARK = {
   error: '#FF4D6A',
   errorLight: 'rgba(255,77,106,0.12)',
   white: '#FFFFFF',
+  whatsapp: '#25D366',
+  whatsappLight: 'rgba(37,211,102,0.12)',
 };
 
 export default function QuoteFormScreen() {
@@ -106,6 +113,7 @@ export default function QuoteFormScreen() {
     currentlyInsured: null,
     insuredMonths: null,
     homeowner: null,
+    contactPreference: null,
     consentGiven: false,
   });
   const [error, setError] = useState('');
@@ -155,8 +163,8 @@ export default function QuoteFormScreen() {
         fullLabel: 'Cobertura Completa',
         fullDesc: 'Incluye colisión y comprensivo',
         whatIs306025: '¿Qué significa 30/60/25?',
-        coverageInfoTitle: 'Cobertura Mínima en Texas',
-        coverageInfoBody: 'Texas requiere mínimo 30/60/25:\n\n• $30,000 lesiones por persona\n• $60,000 lesiones por accidente\n• $25,000 daños a propiedad\n\nEsto es lo mínimo que exige la ley. La cobertura completa agrega protección para tu propio vehículo (colisión + comprensivo).',
+        coverageInfoTitle: 'Mínimo en Texas: 30/60/25',
+        coverageInfoBody: 'Texas te pide tener al menos este seguro:\n\n🏥 $30,000 — Si lastimas a una persona en un accidente, cubre sus gastos médicos.\n\n🏥🏥 $60,000 — Si hay varias personas heridas en el mismo accidente, este es el máximo total.\n\n🚗 $25,000 — Si le pegas al carro de alguien o dañas su propiedad, cubre los arreglos.\n\nEsto es solo lo mínimo que la ley exige. No protege TU carro.\n\n💡 La "Cobertura Completa" agrega protección para tu propio vehículo si chocas o si te lo roban.',
         coverageInfoClose: 'Entendido',
         discountsTitle: 'Descuentos',
         discountsSubtitle: 'Esto nos ayuda a conseguirte mejor precio.',
@@ -168,9 +176,18 @@ export default function QuoteFormScreen() {
         homeownerQ: '¿Eres propietario de casa?',
         yes: 'Sí',
         no: 'No',
+        contactPrefTitle: '¿Cómo prefieres que te contactemos?',
+        contactPrefSubtitle: 'Solo te contactamos si encontramos ahorro real.',
+        contactWhatsApp: 'WhatsApp',
+        contactWhatsAppDesc: 'Respuestas rápidas por chat',
+        contactText: 'Mensaje de texto',
+        contactTextDesc: 'Te enviamos un SMS',
+        contactCall: 'Llamada',
+        contactCallDesc: 'Un agente te llama',
+        contactPrefError: 'Selecciona cómo prefieres ser contactado',
         consentTitle: 'Listo para cotizar',
         consentSubtitle: 'Revisa y confirma.',
-        consentText: 'Acepto que Saver y sus agentes me contacten por WhatsApp o texto para cotizaciones de seguro. Solo me contactarán si encuentran ahorros reales.',
+        consentText: 'Acepto que Saver y sus agentes me contacten para cotizaciones de seguro. Solo me contactarán si encuentran ahorros reales.',
         consentCheck: 'Acepto ser contactado',
         submitting: 'Enviando...',
         submitError: 'Error al enviar. Intenta de nuevo.',
@@ -217,8 +234,8 @@ export default function QuoteFormScreen() {
       fullLabel: 'Full Coverage',
       fullDesc: 'Includes collision and comprehensive',
       whatIs306025: 'What does 30/60/25 mean?',
-      coverageInfoTitle: 'Texas Minimum Coverage',
-      coverageInfoBody: 'Texas requires minimum 30/60/25:\n\n• $30,000 bodily injury per person\n• $60,000 bodily injury per accident\n• $25,000 property damage\n\nThis is the legal minimum. Full coverage adds protection for your own vehicle (collision + comprehensive).',
+      coverageInfoTitle: 'Texas Minimum: 30/60/25',
+      coverageInfoBody: 'Texas requires you to carry at least this much insurance:\n\n🏥 $30,000 — If you hurt someone in an accident, this covers their medical bills.\n\n🏥🏥 $60,000 — If multiple people are injured in the same accident, this is the total max.\n\n🚗 $25,000 — If you damage someone\'s car or property, this covers the repairs.\n\nThis is just the legal minimum. It does NOT protect YOUR car.\n\n💡 "Full Coverage" adds protection for your own vehicle if you crash or it gets stolen.',
       coverageInfoClose: 'Got it',
       discountsTitle: 'Discounts',
       discountsSubtitle: 'This helps us get you a better rate.',
@@ -230,9 +247,18 @@ export default function QuoteFormScreen() {
       homeownerQ: 'Are you a homeowner?',
       yes: 'Yes',
       no: 'No',
+      contactPrefTitle: 'How should we contact you?',
+      contactPrefSubtitle: 'We only reach out if we find real savings.',
+      contactWhatsApp: 'WhatsApp',
+      contactWhatsAppDesc: 'Quick chat replies',
+      contactText: 'Text Message',
+      contactTextDesc: 'We send you an SMS',
+      contactCall: 'Phone Call',
+      contactCallDesc: 'An agent calls you',
+      contactPrefError: 'Choose how you prefer to be contacted',
       consentTitle: 'Ready to quote',
       consentSubtitle: 'Review and confirm.',
-      consentText: 'I agree that Saver and its partner agents may contact me via WhatsApp or text for insurance quotes. They will only contact me if real savings are found.',
+      consentText: 'I agree that Saver and its partner agents may contact me for insurance quotes. They will only contact me if real savings are found.',
       consentCheck: 'I agree to be contacted',
       submitting: 'Submitting...',
       submitError: 'Failed to submit. Please try again.',
@@ -251,6 +277,7 @@ export default function QuoteFormScreen() {
       'vin',
       'coverage',
       'discounts',
+      'contactPref',
       'consent',
     ],
     []
@@ -336,6 +363,12 @@ export default function QuoteFormScreen() {
       case 'coverage':
         return formData.coverage !== null;
       case 'discounts':
+        return true;
+      case 'contactPref':
+        if (!formData.contactPreference) {
+          setError(copy.contactPrefError);
+          return false;
+        }
         return true;
       case 'consent':
         return formData.consentGiven;
@@ -456,29 +489,24 @@ export default function QuoteFormScreen() {
     }
 
     try {
-      const payload = {
-        phone: formData.phone.replace(/\D/g, ''),
-        full_name: formData.fullName.trim(),
-        zip: formData.zip.replace(/\D/g, ''),
-        vehicles: formData.vins.map((v) => ({ vin: v.trim() })),
-        drivers: formData.drivers.map((d) => ({
-          name: d.name.trim(),
-          dob: d.dob,
-        })),
-        coverage_type: formData.coverage === 'minimum' ? 'liability' : 'full',
-        currently_insured: formData.currentlyInsured,
-        insured_months: formData.insuredMonths,
+      const result = await submitQuoteForm({
+        phone: formData.phone,
+        fullName: formData.fullName,
+        zip: formData.zip,
+        drivers: formData.drivers,
+        vehiclesCount: formData.vehiclesCount,
+        vins: formData.vins,
+        coverage: formData.coverage!,
+        currentlyInsured: formData.currentlyInsured,
+        insuredMonths: formData.insuredMonths,
         homeowner: formData.homeowner,
-        source: 'quote-form',
-        status: 'new',
-        created_at: new Date().toISOString(),
-      };
+        contactPreference: formData.contactPreference || 'whatsapp',
+        language: isEs ? 'es' : 'en',
+        consentGiven: formData.consentGiven,
+      });
 
-      console.log('[QUOTE_FORM] Submitting to Supabase:', payload);
-      const { error: dbError } = await supabase.from('leads').insert(payload);
-
-      if (dbError) {
-        console.error('[QUOTE_FORM] Supabase insert error:', dbError);
+      if (!result.success) {
+        console.error('[QUOTE_FORM] Submit error:', result.error);
         setIsSubmitting(false);
         Alert.alert(isEs ? 'Error' : 'Error', copy.submitError);
         return;
@@ -536,6 +564,8 @@ export default function QuoteFormScreen() {
         return <Shield {...iconProps} />;
       case 'discounts':
         return <Home {...iconProps} />;
+      case 'contactPref':
+        return <MessageCircle {...iconProps} />;
       case 'consent':
         return <CheckCircle {...iconProps} />;
       default:
@@ -976,6 +1006,131 @@ export default function QuoteFormScreen() {
           </View>
         );
 
+      case 'contactPref':
+        return (
+          <View style={styles.stepContent}>
+            <View style={styles.stepIconRow}>{getStepIcon('contactPref')}</View>
+            <Text style={styles.stepTitle}>{copy.contactPrefTitle}</Text>
+            <Text style={styles.stepSubtitle}>{copy.contactPrefSubtitle}</Text>
+            <View style={styles.contactOptions}>
+              <Pressable
+                style={[
+                  styles.contactCard,
+                  formData.contactPreference === 'whatsapp' && styles.contactCardWhatsApp,
+                ]}
+                onPress={() => {
+                  setFormData((prev) => ({ ...prev, contactPreference: 'whatsapp' }));
+                  setError('');
+                  if (Platform.OS !== 'web') Haptics.selectionAsync();
+                }}
+                testID="contact-whatsapp"
+              >
+                <View style={[
+                  styles.contactIconWrap,
+                  formData.contactPreference === 'whatsapp' && styles.contactIconWhatsApp,
+                ]}>
+                  <MessageCircle
+                    size={22}
+                    color={formData.contactPreference === 'whatsapp' ? '#FFFFFF' : DARK.whatsapp}
+                    strokeWidth={2}
+                  />
+                </View>
+                <View style={styles.contactTextWrap}>
+                  <Text style={[
+                    styles.contactLabel,
+                    formData.contactPreference === 'whatsapp' && styles.contactLabelActive,
+                  ]}>
+                    {copy.contactWhatsApp}
+                  </Text>
+                  <Text style={styles.contactDesc}>{copy.contactWhatsAppDesc}</Text>
+                </View>
+                {formData.contactPreference === 'whatsapp' && (
+                  <View style={styles.contactCheck}>
+                    <Check size={16} color="#FFFFFF" strokeWidth={3} />
+                  </View>
+                )}
+              </Pressable>
+
+              <Pressable
+                style={[
+                  styles.contactCard,
+                  formData.contactPreference === 'text' && styles.contactCardSelected,
+                ]}
+                onPress={() => {
+                  setFormData((prev) => ({ ...prev, contactPreference: 'text' }));
+                  setError('');
+                  if (Platform.OS !== 'web') Haptics.selectionAsync();
+                }}
+                testID="contact-text"
+              >
+                <View style={[
+                  styles.contactIconWrap,
+                  formData.contactPreference === 'text' && styles.contactIconSelected,
+                ]}>
+                  <MessageSquare
+                    size={22}
+                    color={formData.contactPreference === 'text' ? '#FFFFFF' : DARK.accent}
+                    strokeWidth={2}
+                  />
+                </View>
+                <View style={styles.contactTextWrap}>
+                  <Text style={[
+                    styles.contactLabel,
+                    formData.contactPreference === 'text' && styles.contactLabelActive,
+                  ]}>
+                    {copy.contactText}
+                  </Text>
+                  <Text style={styles.contactDesc}>{copy.contactTextDesc}</Text>
+                </View>
+                {formData.contactPreference === 'text' && (
+                  <View style={[styles.contactCheck, { backgroundColor: DARK.accent }]}>
+                    <Check size={16} color="#FFFFFF" strokeWidth={3} />
+                  </View>
+                )}
+              </Pressable>
+
+              <Pressable
+                style={[
+                  styles.contactCard,
+                  formData.contactPreference === 'call' && styles.contactCardSelected,
+                ]}
+                onPress={() => {
+                  setFormData((prev) => ({ ...prev, contactPreference: 'call' }));
+                  setError('');
+                  if (Platform.OS !== 'web') Haptics.selectionAsync();
+                }}
+                testID="contact-call"
+              >
+                <View style={[
+                  styles.contactIconWrap,
+                  formData.contactPreference === 'call' && styles.contactIconSelected,
+                ]}>
+                  <PhoneCall
+                    size={22}
+                    color={formData.contactPreference === 'call' ? '#FFFFFF' : DARK.accent}
+                    strokeWidth={2}
+                  />
+                </View>
+                <View style={styles.contactTextWrap}>
+                  <Text style={[
+                    styles.contactLabel,
+                    formData.contactPreference === 'call' && styles.contactLabelActive,
+                  ]}>
+                    {copy.contactCall}
+                  </Text>
+                  <Text style={styles.contactDesc}>{copy.contactCallDesc}</Text>
+                </View>
+                {formData.contactPreference === 'call' && (
+                  <View style={[styles.contactCheck, { backgroundColor: DARK.accent }]}>
+                    <Check size={16} color="#FFFFFF" strokeWidth={3} />
+                  </View>
+                )}
+              </Pressable>
+            </View>
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          </View>
+        );
+
       case 'consent':
         return (
           <View style={styles.stepContent}>
@@ -1019,6 +1174,18 @@ export default function QuoteFormScreen() {
                 </Text>
                 <Text style={styles.summaryValue}>
                   {formData.coverage === 'minimum' ? '30/60/25' : isEs ? 'Completa' : 'Full'}
+                </Text>
+              </View>
+              <View style={[styles.summaryRow, { borderBottomWidth: 0 }]}>
+                <Text style={styles.summaryLabel}>
+                  {isEs ? 'Contacto' : 'Contact'}
+                </Text>
+                <Text style={styles.summaryValue}>
+                  {formData.contactPreference === 'whatsapp'
+                    ? 'WhatsApp'
+                    : formData.contactPreference === 'text'
+                      ? isEs ? 'Texto' : 'Text'
+                      : isEs ? 'Llamada' : 'Call'}
                 </Text>
               </View>
             </View>
@@ -1080,6 +1247,8 @@ export default function QuoteFormScreen() {
         return formData.coverage !== null;
       case 'discounts':
         return true;
+      case 'contactPref':
+        return formData.contactPreference !== null;
       case 'consent':
         return formData.consentGiven;
       default:
@@ -1184,7 +1353,9 @@ export default function QuoteFormScreen() {
               <Shield size={28} color={DARK.accent} />
             </View>
             <Text style={styles.modalTitle}>{copy.coverageInfoTitle}</Text>
-            <Text style={styles.modalBody}>{copy.coverageInfoBody}</Text>
+            <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalBody}>{copy.coverageInfoBody}</Text>
+            </ScrollView>
             <Pressable
               style={styles.modalBtn}
               onPress={() => setShowCoverageInfo(false)}
@@ -1434,6 +1605,65 @@ const styles = StyleSheet.create({
   monthTextSelected: {
     color: DARK.green,
   },
+  contactOptions: {
+    gap: 12,
+  },
+  contactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 18,
+    borderRadius: 16,
+    backgroundColor: DARK.surface,
+    borderWidth: 2,
+    borderColor: DARK.border,
+    gap: 14,
+  },
+  contactCardWhatsApp: {
+    borderColor: DARK.whatsapp,
+    backgroundColor: DARK.whatsappLight,
+  },
+  contactCardSelected: {
+    borderColor: DARK.accent,
+    backgroundColor: DARK.accentLight,
+  },
+  contactIconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contactIconWhatsApp: {
+    backgroundColor: DARK.whatsapp,
+  },
+  contactIconSelected: {
+    backgroundColor: DARK.accent,
+  },
+  contactTextWrap: {
+    flex: 1,
+  },
+  contactLabel: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: DARK.text,
+  },
+  contactLabelActive: {
+    fontWeight: '700' as const,
+  },
+  contactDesc: {
+    fontSize: 13,
+    color: DARK.textMuted,
+    marginTop: 2,
+  },
+  contactCheck: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: DARK.whatsapp,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   readyBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1557,6 +1787,7 @@ const styles = StyleSheet.create({
     padding: 28,
     width: '100%',
     maxWidth: 400,
+    maxHeight: '80%',
     borderWidth: 1,
     borderColor: DARK.border,
   },
@@ -1569,11 +1800,14 @@ const styles = StyleSheet.create({
     color: DARK.text,
     marginBottom: 16,
   },
+  modalScroll: {
+    maxHeight: 320,
+    marginBottom: 20,
+  },
   modalBody: {
     fontSize: 15,
     color: DARK.textSecondary,
     lineHeight: 24,
-    marginBottom: 24,
   },
   modalBtn: {
     backgroundColor: DARK.accent,

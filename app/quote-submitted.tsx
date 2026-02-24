@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,21 +11,33 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle, MessageCircle, Phone, ArrowRight } from 'lucide-react-native';
+import {
+  CheckCircle,
+  MessageCircle,
+  Phone,
+  ArrowRight,
+  Shield,
+  Clock,
+  Gift,
+} from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/contexts/AppContext';
 
 const DARK = {
   bg: '#0A1120',
   surface: '#111B2E',
+  surfaceLight: '#162035',
   border: '#1E2D45',
   text: '#F0F4F8',
   textSecondary: '#8B9DC3',
   textMuted: '#5A6E8A',
   accent: '#0066FF',
+  accentLight: 'rgba(0,102,255,0.12)',
   green: '#00C96F',
   greenLight: 'rgba(0,201,111,0.12)',
   whatsapp: '#25D366',
+  whatsappLight: 'rgba(37,211,102,0.12)',
+  orange: '#FF9500',
 };
 
 const WHATSAPP_NUMBER = '+19567738844';
@@ -35,8 +47,9 @@ export default function QuoteSubmittedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { language } = useApp();
-  const scaleAnim = React.useRef(new Animated.Value(0)).current;
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const cardFade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.sequence([
@@ -53,10 +66,17 @@ export default function QuoteSubmittedScreen() {
       }),
     ]).start();
 
+    Animated.timing(cardFade, {
+      toValue: 1,
+      duration: 600,
+      delay: 500,
+      useNativeDriver: true,
+    }).start();
+
     if (Platform.OS !== 'web') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-  }, [scaleAnim, fadeAnim]);
+  }, [scaleAnim, fadeAnim, cardFade]);
 
   const handleWhatsAppPress = () => {
     if (Platform.OS !== 'web') {
@@ -68,6 +88,13 @@ export default function QuoteSubmittedScreen() {
         : 'Hi, I just submitted my info on Saver. Can you help me with a quote?';
     const url = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
     Linking.openURL(url);
+  };
+
+  const handleReferralPress = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.selectionAsync();
+    }
+    router.push('/referral' as any);
   };
 
   const isEs = language === 'es';
@@ -83,6 +110,11 @@ export default function QuoteSubmittedScreen() {
     timeNote: isEs
       ? 'Normalmente respondemos en menos de 24 horas.'
       : 'We typically respond within 24 hours.',
+    promise1: isEs ? 'Sin spam garantizado' : 'No spam guaranteed',
+    promise2: isEs ? 'Respuesta en 24 horas' : 'Response within 24 hours',
+    promise3: isEs ? 'Solo si hay ahorro real' : 'Only if real savings exist',
+    referTitle: isEs ? '¿Conoces a alguien que pueda ahorrar?' : 'Know someone who could save?',
+    referCta: isEs ? 'Referir a un amigo' : 'Refer a friend',
     button: isEs ? 'Volver al inicio' : 'Go to Home',
   };
 
@@ -92,6 +124,8 @@ export default function QuoteSubmittedScreen() {
         colors={['#0A1120', '#101B2E', '#0A1120']}
         style={StyleSheet.absoluteFill}
       />
+
+      <View style={styles.topGlow} />
 
       <View
         style={[
@@ -118,6 +152,19 @@ export default function QuoteSubmittedScreen() {
         <Text style={styles.title}>{text.title}</Text>
         <Text style={styles.message}>{text.message}</Text>
 
+        <Animated.View style={[styles.promiseRow, { opacity: fadeAnim }]}>
+          {[
+            { icon: Shield, label: text.promise1 },
+            { icon: Clock, label: text.promise2 },
+            { icon: CheckCircle, label: text.promise3 },
+          ].map((item, i) => (
+            <View key={i} style={styles.promiseItem}>
+              <item.icon size={14} color={DARK.green} strokeWidth={2.5} />
+              <Text style={styles.promiseText}>{item.label}</Text>
+            </View>
+          ))}
+        </Animated.View>
+
         <Animated.View style={[styles.whatsappSection, { opacity: fadeAnim }]}>
           <Text style={styles.nextStepText}>{text.nextStep}</Text>
           <View style={styles.phoneRow}>
@@ -128,7 +175,7 @@ export default function QuoteSubmittedScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.whatsappButton,
-              pressed && { opacity: 0.9 },
+              pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
             ]}
             onPress={handleWhatsAppPress}
           >
@@ -138,6 +185,25 @@ export default function QuoteSubmittedScreen() {
         </Animated.View>
 
         <Text style={styles.timeNote}>{text.timeNote}</Text>
+
+        <Animated.View style={[styles.referralCard, { opacity: cardFade }]}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.referralPressable,
+              pressed && { opacity: 0.85 },
+            ]}
+            onPress={handleReferralPress}
+          >
+            <View style={styles.referralIconWrap}>
+              <Gift size={18} color={DARK.orange} strokeWidth={2} />
+            </View>
+            <View style={styles.referralTextWrap}>
+              <Text style={styles.referralTitle}>{text.referTitle}</Text>
+              <Text style={styles.referralCta}>{text.referCta}</Text>
+            </View>
+            <ArrowRight size={18} color={DARK.orange} />
+          </Pressable>
+        </Animated.View>
 
         <View style={styles.spacer} />
 
@@ -159,6 +225,17 @@ export default function QuoteSubmittedScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  topGlow: {
+    position: 'absolute',
+    top: -100,
+    left: '50%',
+    marginLeft: -150,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: DARK.green,
+    opacity: 0.06,
   },
   content: {
     flex: 1,
@@ -206,8 +283,29 @@ const styles = StyleSheet.create({
     color: DARK.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 32,
+    marginBottom: 20,
     paddingHorizontal: 16,
+  },
+  promiseRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 24,
+  },
+  promiseItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: DARK.greenLight,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+  },
+  promiseText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: DARK.green,
   },
   whatsappSection: {
     width: '100%',
@@ -215,7 +313,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: DARK.border,
   },
@@ -257,7 +355,42 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: DARK.textMuted,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
+  },
+  referralCard: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  referralPressable: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,149,0,0.06)',
+    borderRadius: 16,
+    padding: 16,
+    gap: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,149,0,0.12)',
+  },
+  referralIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,149,0,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  referralTextWrap: {
+    flex: 1,
+  },
+  referralTitle: {
+    fontSize: 13,
+    color: DARK.textSecondary,
+    marginBottom: 2,
+  },
+  referralCta: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: DARK.orange,
   },
   spacer: {
     flex: 1,
@@ -267,7 +400,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'rgba(0,102,255,0.1)',
+    backgroundColor: DARK.accentLight,
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 14,
