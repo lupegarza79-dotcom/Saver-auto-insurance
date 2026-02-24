@@ -34,6 +34,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/contexts/AppContext';
 import { SAVER } from '@/constants/theme';
+import { trpc } from '@/lib/trpc';
 
 interface MetricCard {
   label: string;
@@ -137,43 +138,53 @@ export default function OpsScreen() {
     };
   }, [isEs]);
 
-  const mockFunnel: FunnelStep[] = useMemo(() => [
-    { label: copy.newLeads, value: 0, color: '#8B9DC3', pct: 100 },
-    { label: copy.waitingDocs, value: 0, color: SAVER.orange, pct: 0 },
-    { label: copy.needsInfo, value: 0, color: SAVER.accent, pct: 0 },
-    { label: copy.readyToQuote, value: 0, color: SAVER.green, pct: 0 },
-    { label: copy.quoting, value: 0, color: '#7C3AED', pct: 0 },
-    { label: copy.quoted, value: 0, color: '#0EA5E9', pct: 0 },
-    { label: copy.savingsFound, value: 0, color: '#10B981', pct: 0 },
-    { label: copy.bound, value: 0, color: '#00C96F', pct: 0 },
-  ], [copy]);
+  const metricsQuery = trpc.funnel.getMetrics.useQuery({});
+  const m = metricsQuery.data;
+  const f = m?.funnel;
+  const ret = m?.retention;
+  const ref = m?.referrals;
+
+  const funnelSteps: FunnelStep[] = useMemo(() => {
+    const total = f?.totalLeads ?? 0;
+    const pct = (v: number) => total > 0 ? Math.round((v / total) * 100) : 0;
+    return [
+      { label: copy.newLeads, value: total, color: '#8B9DC3', pct: 100 },
+      { label: copy.waitingDocs, value: f?.waitingDocs ?? 0, color: SAVER.orange, pct: pct(f?.waitingDocs ?? 0) },
+      { label: copy.needsInfo, value: f?.needsInfo ?? 0, color: SAVER.accent, pct: pct(f?.needsInfo ?? 0) },
+      { label: copy.readyToQuote, value: f?.readyToQuote ?? 0, color: SAVER.green, pct: pct(f?.readyToQuote ?? 0) },
+      { label: copy.quoting, value: f?.quotingInProgress ?? 0, color: '#7C3AED', pct: pct(f?.quotingInProgress ?? 0) },
+      { label: copy.quoted, value: f?.quoted ?? 0, color: '#0EA5E9', pct: pct(f?.quoted ?? 0) },
+      { label: copy.savingsFound, value: f?.savingsFound ?? 0, color: '#10B981', pct: pct(f?.savingsFound ?? 0) },
+      { label: copy.bound, value: f?.boundClosed ?? 0, color: '#00C96F', pct: pct(f?.boundClosed ?? 0) },
+    ];
+  }, [f, copy]);
 
   const opsCards: MetricCard[] = useMemo(() => [
     { label: copy.overdueFollowups, value: 0, icon: AlertTriangle, color: SAVER.error, bgColor: SAVER.errorLight },
     { label: copy.pendingFollowups, value: 0, icon: Clock, color: SAVER.orange, bgColor: SAVER.orangeLight },
-    { label: copy.readyToQuote, value: 0, icon: Zap, color: SAVER.green, bgColor: SAVER.greenLight },
-    { label: copy.noClose, value: 0, icon: Target, color: '#7C3AED', bgColor: 'rgba(124,58,237,0.12)' },
-  ], [copy]);
+    { label: copy.readyToQuote, value: f?.readyToQuote ?? 0, icon: Zap, color: SAVER.green, bgColor: SAVER.greenLight },
+    { label: copy.noClose, value: f?.noClose ?? 0, icon: Target, color: '#7C3AED', bgColor: 'rgba(124,58,237,0.12)' },
+  ], [copy, f]);
 
   const retentionCards: MetricCard[] = useMemo(() => [
-    { label: copy.activePolicies, value: 0, icon: Shield, color: SAVER.accent, bgColor: SAVER.accentLight },
-    { label: copy.pendingPayments, value: 0, icon: Bell, color: SAVER.orange, bgColor: SAVER.orangeLight },
-    { label: copy.paymentsRecovered, value: 0, icon: CheckCircle, color: SAVER.green, bgColor: SAVER.greenLight },
-    { label: copy.renewalsPending, value: 0, icon: RefreshCw, color: '#0EA5E9', bgColor: 'rgba(14,165,233,0.12)' },
-    { label: copy.renewalsRetained, value: 0, icon: TrendingUp, color: SAVER.green, bgColor: SAVER.greenLight },
-  ], [copy]);
+    { label: copy.activePolicies, value: ret?.activePolicies ?? 0, icon: Shield, color: SAVER.accent, bgColor: SAVER.accentLight },
+    { label: copy.pendingPayments, value: ret?.paymentsPending ?? 0, icon: Bell, color: SAVER.orange, bgColor: SAVER.orangeLight },
+    { label: copy.paymentsRecovered, value: ret?.paymentsRecovered ?? 0, icon: CheckCircle, color: SAVER.green, bgColor: SAVER.greenLight },
+    { label: copy.renewalsPending, value: ret?.renewalsPending ?? 0, icon: RefreshCw, color: '#0EA5E9', bgColor: 'rgba(14,165,233,0.12)' },
+    { label: copy.renewalsRetained, value: ret?.renewalsRetained ?? 0, icon: TrendingUp, color: SAVER.green, bgColor: SAVER.greenLight },
+  ], [copy, ret]);
 
   const referralCards: MetricCard[] = useMemo(() => [
-    { label: copy.totalReferrals, value: 0, icon: Gift, color: SAVER.orange, bgColor: SAVER.orangeLight },
-    { label: copy.referralsClosed, value: 0, icon: CheckCircle, color: SAVER.green, bgColor: SAVER.greenLight },
-  ], [copy]);
+    { label: copy.totalReferrals, value: ref?.totalInvites ?? 0, icon: Gift, color: SAVER.orange, bgColor: SAVER.orangeLight },
+    { label: copy.referralsClosed, value: ref?.closed ?? 0, icon: CheckCircle, color: SAVER.green, bgColor: SAVER.greenLight },
+  ], [copy, ref]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await metricsQuery.refetch();
     setRefreshing(false);
-  }, []);
+  }, [metricsQuery]);
 
   const tabs = useMemo(() => [
     { key: 'funnel' as const, label: copy.funnelTab },
@@ -202,7 +213,7 @@ export default function OpsScreen() {
     <View style={styles.funnelSection}>
       <Text style={styles.sectionTitle}>{copy.leadFunnel}</Text>
       <View style={styles.funnelContainer}>
-        {mockFunnel.map((step, i) => (
+        {funnelSteps.map((step, i) => (
           <View key={i} style={styles.funnelRow}>
             <View style={styles.funnelLabelCol}>
               <Text style={styles.funnelLabel} numberOfLines={1}>{step.label}</Text>
@@ -224,11 +235,13 @@ export default function OpsScreen() {
           </View>
         ))}
       </View>
-      <View style={styles.emptyState}>
-        <BarChart3 size={32} color={SAVER.textMuted} strokeWidth={1.5} />
-        <Text style={styles.emptyTitle}>{copy.noData}</Text>
-        <Text style={styles.emptyDesc}>{copy.noDataDesc}</Text>
-      </View>
+      {(f?.totalLeads ?? 0) === 0 && (
+        <View style={styles.emptyState}>
+          <BarChart3 size={32} color={SAVER.textMuted} strokeWidth={1.5} />
+          <Text style={styles.emptyTitle}>{copy.noData}</Text>
+          <Text style={styles.emptyDesc}>{copy.noDataDesc}</Text>
+        </View>
+      )}
     </View>
   );
 

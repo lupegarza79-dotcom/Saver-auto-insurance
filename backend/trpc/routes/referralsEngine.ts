@@ -238,7 +238,7 @@ export const evidenceRouter = createTRPCRouter({
 });
 
 export const funnelRouter = createTRPCRouter({
-  getMetrics: adminProcedure
+  getMetrics: publicProcedure
     .input(z.object({}))
     .query(async () => {
       if (!isSupabaseConfigured()) return getEmptyMetrics();

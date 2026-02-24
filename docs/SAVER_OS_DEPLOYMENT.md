@@ -240,11 +240,21 @@ The backend is a Hono app at `backend/hono.ts`. It deploys automatically via the
 Expo app deploys via Rork platform. QR code available for mobile testing.
 
 ### Manual Steps After Deploy:
-1. Run `schema.sql` then `schema-v2.sql` in Supabase SQL Editor
-2. Create storage buckets (policy-docs, evidence-media, id-verification)
-3. Set environment variables in project settings
-4. Verify backend health: `GET /api/health`
-5. Verify admin access: `GET /api/admin/stats` with basic auth
+1. Run `backend/supabase/schema.sql` in Supabase SQL Editor
+2. Run `backend/supabase/schema-v2.sql` in Supabase SQL Editor
+3. Run `backend/supabase/schema-v3-role-rename.sql` in Supabase SQL Editor
+4. Create storage buckets in Supabase Dashboard > Storage:
+   - `policy-docs` (private)
+   - `evidence-media` (private)
+   - `id-verification` (private)
+5. Set environment variables:
+   - `SUPABASE_URL` (backend)
+   - `SUPABASE_SERVICE_ROLE_KEY` (backend)
+   - `ADMIN_TOKEN` (backend)
+   - `EXPO_PUBLIC_SUPABASE_URL` (frontend)
+   - `EXPO_PUBLIC_SUPABASE_ANON_KEY` (frontend)
+6. Verify backend health: `GET /health` (returns Supabase connectivity check)
+7. Verify admin CSV export: `GET /api/admin/stats` with basic auth
 
 ---
 
@@ -277,12 +287,14 @@ Expo app deploys via Rork platform. QR code available for mobile testing.
 
 | Role | Label | Description |
 |------|-------|-------------|
-| `IAT1` | Insurance Agent Team 1 | First-line agent |
-| `IAT2` | Insurance Agent Team 2 | Second-line agent |
-| `IAT3` | Insurance Agent Team 3 | Third-line agent |
+| `IAT_1` | Insurance Agent Team 1 | First-line agent |
+| `IAT_2` | Insurance Agent Team 2 | Second-line agent |
+| `IAT_3` | Insurance Agent Team 3 | Third-line agent |
 | `IAM` | Insurance Agent Manager | Escalation target |
 | `system` | System | Automated actions |
 | `customer` | Customer | Customer-initiated actions |
+
+**Migration note**: If upgrading from pre-v3, run `schema-v3-role-rename.sql` to update existing data from IAT1/IAT2/IAT3 to IAT_1/IAT_2/IAT_3.
 
 ---
 
@@ -311,3 +323,30 @@ The system enforces:
 | Evidence camera | app/evidence | Camera/photo capture not wired to storage | Wire expo-camera + Supabase Storage |
 | Payment automation | N/A | Reminders are manual, no auto-send | Wire n8n to poll payment_reminders and send WhatsApp |
 | Renewal recheck | N/A | Recheck savings is a flag only | Wire n8n to trigger re-quote workflow on renewal approach |
+
+---
+
+## 13. 10-Minute End-to-End Test
+
+1. **Health check**: `GET /health` — expect `{"status":"healthy","checks":{"supabaseConfigured":true,"supabaseReachable":true,"adminTokenSet":true}}`
+2. **Submit intake**: Call `intake.submit` with phone, language, consent, partial intake data — expect lead created in Supabase `leads` table with status `WAITING_DOCS` or `NEEDS_INFO`
+3. **Assistant flow**: Call `assistant.submitIntake` with more fields — expect status progresses toward `READY_TO_QUOTE`
+4. **Complete intake**: Call `assistant.answer` with remaining required fields — expect `canQuote: true`, status `READY_TO_QUOTE`
+5. **Request quote**: Call `quotesReal.requestQuote` with the leadId — expect `quote_requests` row with status `REQUESTED`
+6. **Ingest quotes**: Call `quotesReal.ingest` with provider/premium data — expect `quotes` rows, request status `COMPLETED`
+7. **Create follow-up**: Call `followups.create` with leadId, type, dueAt — expect `lead_followups` row
+8. **Create referral**: Call `referralsEngine.create` with referrer info — expect `referrals` row
+9. **Verify ops screen**: Open `/ops` — expect funnel numbers match Supabase data
+10. **Verify admin screen**: Open `/admin` — expect stats match Supabase data
+
+---
+
+## 14. Legacy Routes (Disabled)
+
+The following legacy in-memory routes were removed from the active router in the production readiness pass:
+- `users`, `policies`, `documents`, `reminders`, `videoEvidence`, `accidentReports`
+- `snapshots`, `leads` (old system), `admin` (old webhook system)
+- `agents`, `agentLeads`, `leadOffers`, `subscriptions`
+
+Source files remain in `backend/trpc/routes/` and `backend/db/index.ts` for reference but are NOT registered in `app-router.ts`.
+The canonical data path is Supabase-only via `leadStore`, `quoteStore`, and direct Supabase queries.

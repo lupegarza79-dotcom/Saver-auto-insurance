@@ -6,6 +6,7 @@ import { basicAuth } from "hono/basic-auth";
 import { appRouter } from "./trpc/app-router";
 import { createContext } from "./trpc/create-context";
 import { leadStore } from "./trpc/store/leadStore";
+import { isSupabaseConfigured, getSupabase } from "./supabase/client";
 import type { IntakeStatus } from "@/types/intake";
 
 const app = new Hono();
@@ -35,52 +36,58 @@ app.get("/", (c) => {
   });
 });
 
-app.get("/health", (c) => {
-  return c.json({ 
-    status: "healthy",
-    version: "1.0.0",
+app.get("/health", async (c) => {
+  const supabaseOk = isSupabaseConfigured();
+  let supabaseReachable = false;
+
+  if (supabaseOk) {
+    try {
+      const { error } = await getSupabase().from('leads').select('id').limit(1);
+      supabaseReachable = !error;
+    } catch {
+      supabaseReachable = false;
+    }
+  }
+
+  const healthy = supabaseOk && supabaseReachable;
+
+  return c.json({
+    status: healthy ? "healthy" : "degraded",
+    version: "2.0.0",
     timestamp: new Date().toISOString(),
     uptime: process.uptime ? process.uptime() : 0,
-    environment: process.env.NODE_ENV || "development",
-  });
+    environment: process.env.NODE_ENV || "production",
+    checks: {
+      supabaseConfigured: supabaseOk,
+      supabaseReachable,
+      adminTokenSet: !!process.env.ADMIN_TOKEN,
+    },
+  }, healthy ? 200 : 503);
 });
 
 app.get("/docs", (c) => {
   return c.json({
     title: "Saver.Insurance API",
-    version: "1.0.0",
-    description: "Backend API for Saver.Insurance - P&C Insurance Marketplace",
-    webhookEvents: [
-      "user_created",
-      "policy_uploaded",
-      "snapshot_created",
-      "video_evidence_added",
-      "accident_reported",
-      "lead_created",
-      "lead_status_changed",
-      "lead_needs_followup_24h",
-      "lead_stale_48h",
-      "agent_signup_pending",
-      "agent_verified",
-      "agent_rejected",
-      "lead_assigned_to_agent",
-      "renewal_30d",
-      "daily_summary",
-    ],
+    version: "2.0.0",
+    description: "Backend API for SAVER OS - Supabase-backed P&C Insurance Platform",
     routes: {
-      users: "User management",
-      policies: "Policy CRUD operations",
-      documents: "Document management",
-      reminders: "Payment reminders",
-      videoEvidence: "Video evidence storage",
-      accidentReports: "Accident report management",
-      snapshots: "AI-powered policy snapshots",
-      leads: "Lead tracking and management",
-      admin: "Admin dashboard and webhooks",
-      agents: "P&C agent marketplace",
-      agentLeads: "Agent lead assignments",
-      subscriptions: "Agent subscription plans",
+      intake: "Lead intake (submit, getMissingFields, submitField)",
+      assistant: "AI assistant (submitIntake, getTurn, answer, getLead)",
+      quotesReal: "Quote lifecycle (requestQuote, list, ingest, fail, reset)",
+      adminOps: "Admin operations (listLeads, getLead, searchLeads, stats, quoteRequests)",
+      followups: "Follow-up tasks (list, create, complete, escalate, overdue)",
+      commitments: "Customer commitments (list, create, honor)",
+      communications: "Communication log (list, log)",
+      events: "Lead event timeline (list)",
+      retention: "Policy vault + payment/renewal reminders",
+      referralsEngine: "Referral tracking (create, listByReferrer, updateStatus, getStats)",
+      evidence: "Evidence packages (create, get, updateChecklist, listByLead)",
+      funnel: "Ops metrics & funnel (getMetrics, getNoCloseReasons)",
+      agentApplications: "Agent applications (submit)",
     },
+    healthCheck: "GET /health",
+    adminCsvExport: "GET /api/admin/export/leads.csv",
+    adminStats: "GET /api/admin/stats",
   });
 });
 

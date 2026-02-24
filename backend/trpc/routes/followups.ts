@@ -196,7 +196,7 @@ export const commitmentsRouter = createTRPCRouter({
       promisedAt: z.string(),
       channel: z.enum(['whatsapp', 'sms', 'email', 'call']).optional(),
       description: z.string().optional(),
-      createdByRole: z.enum(['IAT1', 'IAT2', 'IAT3', 'IAM', 'system', 'customer']).optional(),
+      createdByRole: z.enum(['IAT_1', 'IAT_2', 'IAT_3', 'IAM', 'system', 'customer']).optional(),
     }))
     .mutation(async ({ input }) => {
       if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
@@ -285,7 +285,7 @@ export const communicationsRouter = createTRPCRouter({
       direction: z.enum(['inbound', 'outbound']),
       messageType: z.enum(['initial_contact', 'follow_up', 'quote_delivery', 'reminder', 'escalation', 'info_request', 'commitment', 'general']),
       content: z.string().optional(),
-      sentByRole: z.enum(['IAT1', 'IAT2', 'IAT3', 'IAM', 'system', 'customer']).optional(),
+      sentByRole: z.enum(['IAT_1', 'IAT_2', 'IAT_3', 'IAM', 'system', 'customer']).optional(),
     }))
     .mutation(async ({ input }) => {
       if (!isSupabaseConfigured()) throw new Error('Supabase not configured');

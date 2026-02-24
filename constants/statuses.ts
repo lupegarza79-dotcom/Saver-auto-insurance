@@ -69,9 +69,9 @@ export const NO_CLOSE_REASONS = [
 ] as const;
 
 export const ACTOR_ROLES = {
-  IAT1: 'IAT1',
-  IAT2: 'IAT2',
-  IAT3: 'IAT3',
+  IAT_1: 'IAT_1',
+  IAT_2: 'IAT_2',
+  IAT_3: 'IAT_3',
   IAM: 'IAM',
   SYSTEM: 'system',
   CUSTOMER: 'customer',
@@ -80,9 +80,9 @@ export const ACTOR_ROLES = {
 export type ActorRole = typeof ACTOR_ROLES[keyof typeof ACTOR_ROLES];
 
 export const ACTOR_ROLE_LABELS: Record<ActorRole, { en: string; es: string }> = {
-  IAT1: { en: 'Agent Team 1', es: 'Equipo Agente 1' },
-  IAT2: { en: 'Agent Team 2', es: 'Equipo Agente 2' },
-  IAT3: { en: 'Agent Team 3', es: 'Equipo Agente 3' },
+  IAT_1: { en: 'Agent Team 1', es: 'Equipo Agente 1' },
+  IAT_2: { en: 'Agent Team 2', es: 'Equipo Agente 2' },
+  IAT_3: { en: 'Agent Team 3', es: 'Equipo Agente 3' },
   IAM: { en: 'Agent Manager', es: 'Gerente de Agentes' },
   system: { en: 'System', es: 'Sistema' },
   customer: { en: 'Customer', es: 'Cliente' },

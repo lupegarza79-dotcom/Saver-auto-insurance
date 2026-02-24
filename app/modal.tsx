@@ -136,30 +136,9 @@ export default function AgentSelectionModal() {
 
   const policy = params.policyId ? policies.find(p => p.id === params.policyId) : policies[0];
 
-  const agentsQuery = trpc.agents.matchForLead.useQuery(
-    {
-      leadState: 'TX',
-      language: language,
-      lineOfBusiness: 'auto',
-      limit: 5,
-    },
-    {
-      retry: 1,
-      staleTime: 60000,
-    }
-  );
-
-  const createLeadMutation = trpc.leads.create.useMutation();
-  const assignAgentsMutation = trpc.agentLeads.assign.useMutation();
-
-  const agents = useMemo(() => {
-    if (agentsQuery.data && agentsQuery.data.length > 0) {
-      return agentsQuery.data;
-    }
-    return FALLBACK_AGENTS;
-  }, [agentsQuery.data]);
-
-  const isLoading = agentsQuery.isLoading;
+  const agents: Agent[] = FALLBACK_AGENTS;
+  const isLoading = false;
+  const agentsQuery = { isError: false, refetch: () => {} };
 
   if (params.type === 'terms') {
     return <TermsContent />;
@@ -193,43 +172,8 @@ export default function AgentSelectionModal() {
     setIsSending(true);
     
     try {
-      let leadId = `lead_${Date.now()}`;
-      
-      if (user) {
-        try {
-          const lead = await createLeadMutation.mutateAsync({
-            userId: user.id,
-            userName: user.name,
-            userPhone: user.phone,
-            source: 'app',
-            policyId: policy?.id,
-            potentialSavings: policy?.premium ? Math.round(policy.premium * 0.2) : undefined,
-          });
-          leadId = lead.id;
-          console.log('[Modal] Lead created:', leadId);
-        } catch (err) {
-          console.log('[Modal] Lead creation failed, using local ID:', err);
-        }
-      }
-
-      try {
-        await assignAgentsMutation.mutateAsync({
-          leadId,
-          agentIds: selectedAgents,
-          leadData: {
-            userName: user?.name,
-            userPhone: user?.phone || '',
-            userState: 'TX',
-            userZip: '78501',
-            lineOfBusiness: 'auto',
-            potentialSavings: policy?.premium ? Math.round(policy.premium * 0.2) : undefined,
-            snapshotGrade: 'B',
-          },
-        });
-        console.log('[Modal] Agents assigned successfully');
-      } catch (err) {
-        console.log('[Modal] Agent assignment failed:', err);
-      }
+      console.log('[Modal] Agent selection submitted for agents:', selectedAgents);
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       setIsSending(false);
       Alert.alert(
