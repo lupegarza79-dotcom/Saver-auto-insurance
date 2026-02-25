@@ -8,7 +8,7 @@ export const followupsRouter = createTRPCRouter({
     .input(z.object({
       leadId: z.string().optional(),
       status: z.enum(['pending', 'completed', 'skipped', 'escalated', 'overdue']).optional(),
-      assignedToRole: z.enum(['IAT1', 'IAT2', 'IAT3', 'IAM']).optional(),
+      assignedToRole: z.enum(['IAT_1', 'IAT_2', 'IAT_3', 'IAM']).optional(),
       limit: z.number().int().min(1).max(100).default(50),
     }))
     .query(async ({ input }) => {
@@ -38,7 +38,7 @@ export const followupsRouter = createTRPCRouter({
       leadId: z.string(),
       type: z.enum(['scheduled', 'sla_warning', 'escalation', 'commitment_check', 'recheck_savings', 'renewal_prompt']),
       dueAt: z.string(),
-      assignedToRole: z.enum(['IAT1', 'IAT2', 'IAT3', 'IAM']).optional(),
+      assignedToRole: z.enum(['IAT_1', 'IAT_2', 'IAT_3', 'IAM']).optional(),
       assignedToId: z.string().optional(),
       priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
       reason: z.string().optional(),
@@ -108,7 +108,7 @@ export const followupsRouter = createTRPCRouter({
   escalate: adminProcedure
     .input(z.object({
       id: z.string(),
-      escalationTargetRole: z.enum(['IAT1', 'IAT2', 'IAT3', 'IAM']),
+      escalationTargetRole: z.enum(['IAT_1', 'IAT_2', 'IAT_3', 'IAM']),
       notes: z.string().optional(),
     }))
     .mutation(async ({ input }) => {

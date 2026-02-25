@@ -139,6 +139,17 @@ export const retentionRouter = createTRPCRouter({
         .single();
 
       if (error) throw new Error(error.message);
+
+      if (input.leadId) {
+        await logRetentionEvent(input.leadId, 'payment_reminder.created', {
+          reminderId: id,
+          carrier: input.carrier,
+          amountCents: input.amountCents,
+          dueDate: input.dueDate,
+          channel: input.channel,
+        });
+      }
+
       return { id: data.id, ok: true };
     }),
 
@@ -245,6 +256,17 @@ export const retentionRouter = createTRPCRouter({
         .single();
 
       if (error) throw new Error(error.message);
+
+      if (input.leadId) {
+        await logRetentionEvent(input.leadId, 'renewal_reminder.created', {
+          reminderId: id,
+          carrier: input.carrier,
+          renewalDate: input.renewalDate,
+          channel: input.channel,
+          recheckSavings: input.recheckSavings,
+        });
+      }
+
       return { id: data.id, ok: true };
     }),
 
