@@ -69,28 +69,10 @@ export default function AgentDashboardScreen() {
 
   const agentId = agentProfile?.id || '';
 
-  const leadsQuery = trpc.agentLeads.getByAgent.useQuery(
-    { agentId },
-    { enabled: !!agentId, refetchInterval: 30000 }
-  );
-
-  const statsQuery = trpc.agentLeads.getStats.useQuery(
-    { agentId },
-    { enabled: !!agentId, refetchInterval: 30000 }
-  );
-
-  const updateStatusMutation = trpc.agentLeads.updateStatus.useMutation({
-    onSuccess: () => {
-      leadsQuery.refetch();
-      statsQuery.refetch();
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-    },
-    onError: (error) => {
-      Alert.alert('Error', error.message);
-    },
-  });
+  // TODO: agentLeads router not yet implemented — stub queries for future use
+  const leadsQuery = { data: [] as any[], isLoading: false, refetch: async () => {} };
+  const statsQuery = { data: null as any, isLoading: false, refetch: async () => {} };
+  const updateStatusMutation = { mutate: (_args: any) => { console.warn('agentLeads.updateStatus not implemented'); }, isPending: false };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

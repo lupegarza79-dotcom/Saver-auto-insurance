@@ -43,21 +43,9 @@ export default function AgentSubscriptionScreen() {
   const [selectedTier, setSelectedTier] = useState<SubscriptionTier>('pro');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
-  const subscriptionQuery = trpc.subscriptions.getByAgentId.useQuery(
-    { agentId: user?.id || '' },
-    { enabled: !!user?.id }
-  );
-
-  const upgradeMutation = trpc.subscriptions.upgrade.useMutation({
-    onSuccess: () => {
-      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert(
-        t.subscription?.upgradeSuccess || 'Welcome to Pro!',
-        t.subscription?.upgradeSuccessDesc || 'Your subscription has been activated.',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
-    },
-  });
+  // TODO: subscriptions router not yet implemented — stub queries for future use
+  const subscriptionQuery = { data: null as any, isLoading: false, refetch: async () => {} };
+  const upgradeMutation = { mutate: (_args: any) => { console.warn('subscriptions.upgrade not implemented'); }, isPending: false };
 
   const currentTier = subscriptionQuery.data?.subscription?.tier || 'free';
 
